@@ -6,3 +6,4 @@ from .sublimepython_repl import *
 from .powershell_repl import *
 from .sublimeutop_repl import *
 # from .execnet_repl import *  # disabled for now
+from .ssh_repl import *
