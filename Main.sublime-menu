@@ -51,7 +51,7 @@
                             {
                                 "command": "open_file", "args":
                                 {
-                                    "file": "${packages}/SublimeREPL/SublimeREPL.sublime-settings"
+                                    "file": "${packages}/SublimeREPL-ssh/SublimeREPL.sublime-settings"
                                 },
                                 "caption": "Settings – Default"
                             },

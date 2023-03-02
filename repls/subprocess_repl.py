@@ -12,6 +12,7 @@ import signal
 from sublime import load_settings, error_message
 from .autocomplete_server import AutocompleteServer
 from .killableprocess import Popen
+# from subprocess import Popen
 
 PY3 = sys.version_info[0] == 3
 
@@ -254,7 +255,7 @@ class SubprocessRepl(Repl):
     def available_signals(self):
         signals = {}
         for k, v in list(signal.__dict__.items()):
-            if not k.startswith("SIG"):
+            if not k.startswith("SIG") and k not in ['CTRL_C_EVENT','CTRL_BREAK_EVENT']:
                 continue
             signals[k] = v
         return signals
