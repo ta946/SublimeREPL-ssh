@@ -33,7 +33,7 @@ This makes this plugin only useful for simple terminal use
 ```
 {
    "keys": [<user-defined keys>], "command": "repl_open", "args": {
-        "cmd": {"windows": ["ssh", "-tt", "<user>@<ip-address>"]},
+        "cmd": {"windows": ["ssh", "-tt", "-i", <path_to_key.pem>, "<user>@<ip-address>"]},
         "cmd_postfix": "\n",
         "encoding": {"linux": "utf-8", "osx": "utf-8", "windows": "$win_cmd_encoding"},
         "env": {}, 
