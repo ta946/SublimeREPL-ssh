@@ -6,17 +6,29 @@ SublimeREPL-ssh (for windows)
 The purpose of this fork is to allow ssh repl for windows
 
 
-### Documentation
+### Limitations
 
-#### Getting started
+This is not a terminal emulator, it just pushes the text you type through a subprocess running ssh then reads the response back.
 
-* This method assumes you have ssh private keys `.pem` to connect to the server
+* It will keep reading a line until it sees a `\n` or `\x1b]0;` to indicate the end. If it does not see either of those, it may get stuck waiting for an end infinitately.
+* Any interactive terminal actions will not work. eg:
+    * password entry
+    * `ctrl+r` reverse search
+    * `vi` for interactive file editing
+* long responses like displaying a 20MB+ log file may freeze the repl causing sublime to crash
+
+This makes this plugin only useful for simple terminal use
+
+
+### Getting started
+
+* This method assumes you have ssh private keys `.pem` to connect to the server as password entry will not work!
 * Before connecting to a server for the first time
     * you must ssh into the server using a regular terminal and type yes when `the authenticity of host can't be established` message appears to add the server to your `known_hosts` OR
     * create a file `C:\Users\<user>\.ssh\config` and add the line `StrictHostKeyChecking no`
 
 
-#### Keybindings to add
+### Keybindings to add
 
 ```
 {
