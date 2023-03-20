@@ -1,9 +1,9 @@
 SublimeREPL-ssh (for windows)
 =====================================
 
-### Forked from [SublimeREPL](https://github.com/wuub/SublimeREPL). [Original Readme](./README_original.md)
+### Forked from [SublimeREPL](https://github.com/wuub/SublimeREPL). ([Original Readme](./README_original.md))
 
-The purpose of this fork is to enable ssh usage for windows
+The purpose of this fork is to allow ssh repl for windows
 
 
 ### Documentation
@@ -16,11 +16,11 @@ The purpose of this fork is to enable ssh usage for windows
     * create a file `C:\Users\<user>\.ssh\config` and add the line `StrictHostKeyChecking no`
 
 
-#### Keybindings
+#### Keybindings to add
 
 ```
-{"keys": [<user-defined keys>], "command": "repl_open", "args":
-    {
+{
+   "keys": [<user-defined keys>], "command": "repl_open", "args": {
         "cmd": {"windows": ["ssh", "-tt", "<user>@<ip-address>"]},
         "cmd_postfix": "\n",
         "encoding": {"linux": "utf-8", "osx": "utf-8", "windows": "$win_cmd_encoding"},
@@ -29,6 +29,9 @@ The purpose of this fork is to enable ssh usage for windows
         "suppress_echo": true,
         "syntax": "Packages/SublimeREPL-ssh/config/Io/Io.tmLanguage",
         "type": "ssh"
+    },
+    { "keys": ["shift+ctrl+c"], "command": "subprocess_repl_send_signal", "args": {"signal": "SIGTERM"},
+        "context": [{ "key": "setting.repl", "operator": "equal", "operand": true }]
     }
 }
 ```
