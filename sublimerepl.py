@@ -475,7 +475,7 @@ class ReplManager(object):
             if rvid == external_id or external_id in additional_scopes:
                 yield rv
 
-    def open(self, window, encoding, type, syntax=None, view_id=None, **kwds):
+    def open(self, window, encoding, type, syntax=None, view_id=None, title=None, **kwds):
         repl_restart_args = {
             'encoding': encoding,
             'type': type,
@@ -497,7 +497,9 @@ class ReplManager(object):
             rv.call_on_close.append(self._delete_repl)
             self.repl_views[r.id] = rv
             view.set_scratch(True)
-            view.set_name("*REPL* [%s]" % (r.name(),))
+            if title is None:
+                title = "*REPL* [%s]" % (title,)
+            view.set_name(title)
             return rv
         except Exception as e:
             traceback.print_exc()
