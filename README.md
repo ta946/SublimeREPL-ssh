@@ -10,14 +10,10 @@ The purpose of this fork is to allow ssh repl for windows
 
 This is not a terminal emulator, it just pushes the text you type through a subprocess running ssh then reads the response back.
 
-* It will keep reading a line until it sees a `\n` or `\x1b]0;` to indicate the end. If it does not see either of those, it may get stuck waiting for an end infinitately.
 * Any interactive terminal actions will not work. eg:
     * password entry
     * `ctrl+r` reverse search
     * `vi` for interactive file editing
-* long responses like displaying a 20MB+ log file may freeze the repl causing sublime to crash
-
-This makes this plugin only useful for simple terminal use
 
 
 ### Getting started

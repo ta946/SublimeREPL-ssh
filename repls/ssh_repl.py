@@ -1,5 +1,6 @@
 import os
 import re
+from time import sleep
 
 from .sublimeutop_repl import SubprocessRepl
 
@@ -13,33 +14,25 @@ else:
 
 class SshRepl(SubprocessRepl):
     TYPE = "ssh"
-    _NEWLINE_BYTE = b'\n'
+    # _NEWLINE_BYTE = b'\n'
+    # _TERMINAL_BYTES_AMAZON_LINUX = [b'\x1b',b'[',b'?',b'1',b'0',b'3',b'4',b'h']
+    # _TERMINAL_END_BYTES = [b'$',b' ']
+    # _EOF_BYTES = [b'\x1b',b']',b'0',b';']
+    # _PYTHON_BYTES = [b'>',b'>',b'>',b' ']
+    # _DOCKER_BYTES = [b'r',b'o',b'o',b't',b'@']
+    # _DOCKER_END_BYTES = [b'#',b' ']
     _TERMINAL_BYTE = b'\x07'
-    _TERMINAL_BYTES_AMAZON_LINUX = [b'\x1b',b'[',b'?',b'1',b'0',b'3',b'4',b'h']
-    _TERMINAL_END_BYTES = [b'$',b' ']
-    _EOF_BYTES = [b'\x1b',b']',b'0',b';']
-    _PYTHON_BYTES = [b'>',b'>',b'>',b' ']
-    _DOCKER_BYTES = [b'r',b'o',b'o',b't',b'@']
-    _DOCKER_END_BYTES = [b'#',b' ']
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._os_amazon_linux = False
-
-    # def read(self):
-    #     """Reads at least one decoded char of output"""
-    #     while True:
-    #         bs = self.read_bytes()
-    #         if not bs:
-    #             return None
-    #         try:
-    #             output = bs.decode()
-    #             print(output)
-    #         except Exception as e:
-    #             output = "■"
-    #             self.reset_decoder()
-    #         if output:
-    #             return output
+    _TERMINAL_PREFIX_REGEX = b'\\x1b]0;(\S+@ip-\d{1,3}-\d{1,3}-\d{1,3}-\d{1,3}:[^$]+)\\x07(\\x1b\[01;\d{1,3}m\S+@ip-\d{1,3}-\d{1,3}-\d{1,3}-\d{1,3}.+\$)?'
+    _terminal_prefix_regex_compiled = re.compile(_TERMINAL_PREFIX_REGEX)
+    _TERMINAL_BYTES_AMAZON_LINUX_REGEX = b'\\x1b\[\?\d{1,4}h'
+    _terminal_bytes_amazon_linux_regex_compiled = re.compile(_TERMINAL_BYTES_AMAZON_LINUX_REGEX)
+    _TERMINAL_BYTES_AMAZON_LINUX_SUFFIX_REGEX = b'\[\S+@ip-\d{1,3}-\d{1,3}-\d{1,3}-\d{1,3} [^\]]+]\$ '
+    _terminal_bytes_amazon_linux_suffix_regex_compiled = re.compile(_TERMINAL_BYTES_AMAZON_LINUX_SUFFIX_REGEX)
+    _ANSI_COLOR_PREFIX = b'\x1b\[38;5;\d{1,3}m'
+    _ansi_color_prefix_compiled = re.compile(_ANSI_COLOR_PREFIX)
+    _ANSI_COLOR_SUFFIX = b'\x1b\[38;5;\d{1,3}m'
+    _ansi_color_suffix_compiled = re.compile(_ANSI_COLOR_SUFFIX)
+    _read_buffer = 4096
 
     def _starts_with(self, arr, byte_list):
         return byte_list[:len(arr)] == arr
@@ -71,14 +64,17 @@ class SshRepl(SubprocessRepl):
             eol = True
         return eol, terminal_prefix_index
 
-    def _amazon_linux_remove_ansi_color(self, line):
-        line = re.sub(b'\x1b\[38;5;\d{1,3}m', b'', line)
-        line = re.sub(b'\x1b\[0m', b'', line)
+    def _remove_ansi_color(self, line):
+        line = self._ansi_color_prefix_compiled.sub(b'', line)
+        line = self._ansi_color_suffix_compiled.sub(b'', line)
         return line
 
     def _post_process_line(self, line):
-        if self._os_amazon_linux:
-            line = self._amazon_linux_remove_ansi_color(line)
+        line = line.replace(b'\r', b'')
+        line = self._terminal_prefix_regex_compiled.sub(rb'\1$', line)
+        line = self._remove_ansi_color(line)
+        line = self._terminal_bytes_amazon_linux_regex_compiled.sub(b'', line)
+        line = self._terminal_bytes_amazon_linux_suffix_regex_compiled.sub(b' ', line)
         return line
 
     def read_bytes(self):
@@ -87,11 +83,21 @@ class SshRepl(SubprocessRepl):
             while True:
                 i, _, _ = select.select([out], [], [])
                 if i:
-                    return out.read(4096)
+                    return out.read(self._read_buffer)
         else:
+            res = out.read1(self._read_buffer)
+            if len(res) == self._read_buffer:
+                sleep(0.001)
+            # print('res BEFORE')
+            # print(res)
+            res = self._post_process_line(res)
+            # print('res AFTER')
+            # print(res)
+            return res
+
             byte_list = []
             while True:
-                byte = self.popen.stdout.read(1)
+                byte = out.read(1)
                 if byte == b'\r':
                     # f'in HACK, for \r\n -> \n translation on windows
                     # I tried universal_endlines but it was pain and misery! :'(
