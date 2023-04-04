@@ -83,46 +83,45 @@ class SshRepl(SubprocessRepl):
             while True:
                 i, _, _ = select.select([out], [], [])
                 if i:
-                    return out.read(self._read_buffer)
-        else:
-            res = out.read1(self._read_buffer)
-            if len(res) == self._read_buffer:
-                sleep(0.001)
-            # print('res BEFORE')
-            # print(res)
-            res = self._post_process_line(res)
-            # print('res AFTER')
-            # print(res)
-            return res
+                    break
+        res = out.read1(self._read_buffer)
+        if len(res) == self._read_buffer:
+            sleep(0.001)
+        # print('res BEFORE')
+        # print(res)
+        res = self._post_process_line(res)
+        # print('res AFTER')
+        # print(res)
+        return res
 
-            byte_list = []
-            while True:
-                byte = out.read(1)
-                if byte == b'\r':
-                    # f'in HACK, for \r\n -> \n translation on windows
-                    # I tried universal_endlines but it was pain and misery! :'(
+        byte_list = []
+        while True:
+            byte = out.read(1)
+            if byte == b'\r':
+                # f'in HACK, for \r\n -> \n translation on windows
+                # I tried universal_endlines but it was pain and misery! :'(
+                continue
+            byte_list.append(byte)
+            # print('byte_list')
+            # print(byte_list)
+            # print(b''.join(byte_list))
+            eol, terminal_prefix_index = self._check_eol(byte_list)
+            if eol:
+                if terminal_prefix_index is not None:
+                    byte_list = byte_list[terminal_prefix_index+1:]
+                if len(byte_list) == len(self._EOF_BYTES) and byte_list == self._EOF_BYTES:
+                    byte_list = []
+                elif self._ends_with(self._EOF_BYTES, byte_list):
+                    byte_list = byte_list[:-len(self._EOF_BYTES)]+[b'\n']
+                if not len(byte_list):
                     continue
-                byte_list.append(byte)
-                # print('byte_list')
-                # print(byte_list)
-                # print(b''.join(byte_list))
-                eol, terminal_prefix_index = self._check_eol(byte_list)
-                if eol:
-                    if terminal_prefix_index is not None:
-                        byte_list = byte_list[terminal_prefix_index+1:]
-                    if len(byte_list) == len(self._EOF_BYTES) and byte_list == self._EOF_BYTES:
-                        byte_list = []
-                    elif self._ends_with(self._EOF_BYTES, byte_list):
-                        byte_list = byte_list[:-len(self._EOF_BYTES)]+[b'\n']
-                    if not len(byte_list):
-                        continue
-                    line = b''.join(byte_list)
-                    # print('line before post process')
-                    # print(line)
-                    line = self._post_process_line(line)
-                    # print('line')
-                    # print(line)
-                    return line
+                line = b''.join(byte_list)
+                # print('line before post process')
+                # print(line)
+                line = self._post_process_line(line)
+                # print('line')
+                # print(line)
+                return line
 
     def send_signal(self, sig):
         self.write_bytes(b'\x03')

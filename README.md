@@ -1,9 +1,9 @@
-SublimeREPL-ssh (for windows)
+SublimeREPL-ssh
 =====================================
 
 ### Forked from [SublimeREPL](https://github.com/wuub/SublimeREPL). ([Original Readme](./README_original.md))
 
-The purpose of this fork is to allow ssh repl for windows
+The purpose of this fork is to enable ssh repl
 
 
 ### Limitations
@@ -21,7 +21,7 @@ This is not a terminal emulator, it just pushes the text you type through a subp
 * This method assumes you have ssh private keys `.pem` to connect to the server as password entry will not work!
 * Before connecting to a server for the first time
     * you must ssh into the server using a regular terminal and type yes when `the authenticity of host can't be established` message appears to add the server to your `known_hosts` OR
-    * create a file `C:\Users\<user>\.ssh\config` and add the line `StrictHostKeyChecking no`
+    * open `C:\Users\<user>\.ssh\config` (create the file if it doesn't exist) and add the line `StrictHostKeyChecking no`
 
 
 ### Keybindings to add
@@ -29,7 +29,7 @@ This is not a terminal emulator, it just pushes the text you type through a subp
 ```
 {
    "keys": [<user-defined keys>], "command": "repl_open", "args": {
-        "cmd": {"windows": ["ssh", "-tt", "-i", <path_to_key.pem>, "<user>@<ip-address>"]},
+        "cmd": ["ssh", "-tt", "-i", <path_to_key.pem>, "<user>@<ip-address>"],
         "cmd_postfix": "\n",
         "encoding": {"linux": "utf-8", "osx": "utf-8", "windows": "$win_cmd_encoding"},
         "env": {}, 
