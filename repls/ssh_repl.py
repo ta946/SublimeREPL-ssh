@@ -2,7 +2,7 @@ import os
 import re
 from time import sleep
 
-from .sublimeutop_repl import SubprocessRepl
+from .subprocess_repl import SubprocessRepl
 
 
 if os.name == 'posix':
