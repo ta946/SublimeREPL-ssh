@@ -498,7 +498,7 @@ class ReplManager(object):
             self.repl_views[r.id] = rv
             view.set_scratch(True)
             if title is None:
-                title = "*REPL* [%s]" % (title,)
+                title = "*REPL* [%s]" % (r.name(),)
             view.set_name(title)
             return rv
         except Exception as e:
