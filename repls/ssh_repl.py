@@ -24,14 +24,12 @@ class SshRepl(SubprocessRepl):
     _TERMINAL_BYTE = b'\x07'
     _TERMINAL_PREFIX_REGEX = b'\\x1b]0;(\S+@ip-\d{1,3}-\d{1,3}-\d{1,3}-\d{1,3}:[^$]+)\\x07(\\x1b\[01;\d{1,3}m\S+@ip-\d{1,3}-\d{1,3}-\d{1,3}-\d{1,3}.+\$)?'
     _terminal_prefix_regex_compiled = re.compile(_TERMINAL_PREFIX_REGEX)
-    _TERMINAL_BYTES_AMAZON_LINUX_REGEX = b'\\x1b\[\?\d{1,4}h'
+    _TERMINAL_BYTES_AMAZON_LINUX_REGEX = b'\\x1b\[\?\d{1,4}[h|l]'
     _terminal_bytes_amazon_linux_regex_compiled = re.compile(_TERMINAL_BYTES_AMAZON_LINUX_REGEX)
     _TERMINAL_BYTES_AMAZON_LINUX_SUFFIX_REGEX = b'\[\S+@ip-\d{1,3}-\d{1,3}-\d{1,3}-\d{1,3} [^\]]+]\$ '
     _terminal_bytes_amazon_linux_suffix_regex_compiled = re.compile(_TERMINAL_BYTES_AMAZON_LINUX_SUFFIX_REGEX)
-    _ANSI_COLOR_PREFIX = b'\x1b\[38;5;\d{1,3}m'
-    _ansi_color_prefix_compiled = re.compile(_ANSI_COLOR_PREFIX)
-    _ANSI_COLOR_SUFFIX = b'\x1b\[38;5;\d{1,3}m'
-    _ansi_color_suffix_compiled = re.compile(_ANSI_COLOR_SUFFIX)
+    _ANSI_COLOR_REGEX = b'\x1b\[38;5;\d{1,3}m'
+    _ansi_color_regex_compiled = re.compile(_ANSI_COLOR_REGEX)
     _read_buffer = 4096
 
     def _starts_with(self, arr, byte_list):
@@ -65,8 +63,7 @@ class SshRepl(SubprocessRepl):
         return eol, terminal_prefix_index
 
     def _remove_ansi_color(self, line):
-        line = self._ansi_color_prefix_compiled.sub(b'', line)
-        line = self._ansi_color_suffix_compiled.sub(b'', line)
+        line = self._ansi_color_regex_compiled.sub(b'', line)
         return line
 
     def _post_process_line(self, line):
