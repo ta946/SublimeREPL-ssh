@@ -7,3 +7,4 @@ from .powershell_repl import *
 from .sublimeutop_repl import *
 # from .execnet_repl import *  # disabled for now
 from .ssh_repl import *
+from .ssh_paramiko_repl import *
