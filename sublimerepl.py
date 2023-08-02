@@ -29,6 +29,7 @@ except ImportError:
     import Queue as queue
     unicode_type = unicode
     PY2 = True
+from . import CAN_USE_PARAMIKO
 
 PLATFORM = sublime.platform().lower()
 SETTINGS_FILE = 'SublimeREPL-ssh.sublime-settings'
@@ -475,7 +476,20 @@ class ReplManager(object):
             if rvid == external_id or external_id in additional_scopes:
                 yield rv
 
+    @staticmethod
+    def _check_paramiko(type, kwds):
+        if type.upper() != 'SSH_PARAMIKO':
+            return type, kwds
+        if not sublime.load_settings(SETTINGS_FILE).get("use_paramiko", False) or not CAN_USE_PARAMIKO:
+            type = 'ssh'
+            user = kwds.pop('user')
+            ip = kwds.pop('ip')
+            key = kwds.pop('key')
+            kwds['cmd'] = ["ssh", "-tt", "-i", key, f"{user}@{ip}"]
+        return type, kwds
+
     def open(self, window, encoding, type, syntax=None, view_id=None, title=None, **kwds):
+        type, kwds = self._check_paramiko(type, kwds)
         repl_restart_args = {
             'encoding': encoding,
             'type': type,

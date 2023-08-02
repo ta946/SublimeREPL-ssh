@@ -99,5 +99,10 @@
     // treated as python file and is joined with root directory of the
     // selected virtualenv. For example, this is how you can setup django shell:
     // "custom_python_shells": {"django": "my_django_project/manage.py shell"}
-    "custom_python_shells": {}
+    "custom_python_shells": {},
+
+    // If using windows and set to true, repl will use paramiko for ssh
+    // if dependancies are able to be set up correctly.
+    // Else subprocess repl will be used.
+    "use_paramiko": true
 }
