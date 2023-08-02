@@ -1,6 +1,6 @@
 [
     {
-        "caption": "SublimeREPL: Maxima",
+        "caption": "SublimeREPL-ssh: Maxima",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_maxima",

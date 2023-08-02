@@ -1,6 +1,6 @@
 [
     {
-        "caption": "SublimeREPL: Haskell",
+        "caption": "SublimeREPL-ssh: Haskell",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_haskell",
@@ -8,7 +8,7 @@
         }
     },
     {
-        "caption": "SublimeREPL: Haskell - RUN current file",
+        "caption": "SublimeREPL-ssh: Haskell - RUN current file",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_haskell_run",

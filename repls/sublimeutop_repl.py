@@ -43,7 +43,7 @@ class SublimeUTopRepl(SubprocessRepl):
     #
     # User interaction consists of visible artifacts (prompt, etc)
     # and input in form of complete expressions. History is handled
-    # by SublimeREPL.
+    # by SublimeREPL-ssh.
     #
 
     def compose_highlights(self, a, b):

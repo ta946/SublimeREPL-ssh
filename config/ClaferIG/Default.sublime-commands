@@ -1,6 +1,6 @@
 [
     {
-        "caption": "SublimeREPL: ClaferIG Simple",
+        "caption": "SublimeREPL-ssh: ClaferIG Simple",
         "command": "run_existing_window_command", 
         "args": {
             "id": "repl_claferIGS",
@@ -8,7 +8,7 @@
         }
     },
     {
-        "caption": "SublimeREPL: ClaferIG Full",
+        "caption": "SublimeREPL-ssh: ClaferIG Full",
         "command": "run_existing_window_command", 
         "args": {
             "id": "repl_claferIGF",
@@ -16,7 +16,7 @@
         }
     },
     {
-        "caption": "SublimeREPL: ClaferChocoIG",
+        "caption": "SublimeREPL-ssh: ClaferChocoIG",
         "command": "run_existing_window_command", 
         "args": {
             "id": "repl_claferChocoIG",
@@ -24,7 +24,7 @@
         }
     },
     {
-        "caption": "SublimeREPL: ClaferSMT",
+        "caption": "SublimeREPL-ssh: ClaferSMT",
         "command": "run_existing_window_command", 
         "args": {
             "id": "repl_claferSMT",

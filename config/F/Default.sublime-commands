@@ -1,6 +1,6 @@
 [
     {
-        "caption": "SublimeREPL: F#",
+        "caption": "SublimeREPL-ssh: F#",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_f#",

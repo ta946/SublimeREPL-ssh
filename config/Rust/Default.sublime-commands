@@ -1,6 +1,6 @@
 [
     {
-        "caption": "SublimeREPL: Rust",
+        "caption": "SublimeREPL-ssh: Rust",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_Rust",

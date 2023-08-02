@@ -1,6 +1,6 @@
 [
     {
-        "caption": "SublimeREPL: Shell",
+        "caption": "SublimeREPL-ssh: Shell",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_shell",

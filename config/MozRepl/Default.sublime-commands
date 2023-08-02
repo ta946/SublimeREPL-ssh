@@ -1,6 +1,6 @@
 [
     {
-        "caption": "SublimeREPL: MozRepl",
+        "caption": "SublimeREPL-ssh: MozRepl",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_mozrepl",

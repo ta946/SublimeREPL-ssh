@@ -1,6 +1,6 @@
 [
     {
-        "caption": "SublimeREPL: Octave",
+        "caption": "SublimeREPL-ssh: Octave",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_octave",

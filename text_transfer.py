@@ -56,7 +56,7 @@ def coffee(repl, text, view=None, repl_view=None):
 def python_sender(repl, text, view=None, repl_view=None):
     text_wo_encoding = re.sub(
         pattern=r"#.*coding[:=]\s*([-\w.]+)",
-        repl="# <SublimeREPL: encoding comment removed>",
+        repl="# <SublimeREPL-ssh: encoding comment removed>",
         string=text,
         count=1)
     code = binascii.hexlify(text_wo_encoding.encode("utf-8"))

@@ -1,6 +1,6 @@
 [
     {
-        "caption": "SublimeREPL: Python",
+        "caption": "SublimeREPL-ssh: Python",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_python",
@@ -8,7 +8,7 @@
         }
     },
     {
-        "caption": "SublimeREPL: Python - PDB current file",
+        "caption": "SublimeREPL-ssh: Python - PDB current file",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_python_pdb",
@@ -16,7 +16,7 @@
         }
     },
     {
-        "caption": "SublimeREPL: Python - RUN current file",
+        "caption": "SublimeREPL-ssh: Python - RUN current file",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_python_run",
@@ -25,10 +25,10 @@
     },
     {
         "command": "python_virtualenv_repl",
-        "caption": "SublimeREPL: Python - virtualenv"
+        "caption": "SublimeREPL-ssh: Python - virtualenv"
     },
     {
-        "caption": "SublimeREPL: Python - IPython",
+        "caption": "SublimeREPL-ssh: Python - IPython",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_python_ipython",
@@ -36,7 +36,7 @@
         }
     },
     {
-        "caption": "SublimeREPL: Python - Custom shell",
+        "caption": "SublimeREPL-ssh: Python - Custom shell",
         "command": "python_custom_shell_virtualenv_repl"
     }
 ]

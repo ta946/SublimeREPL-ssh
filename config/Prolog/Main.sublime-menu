@@ -3,9 +3,9 @@
     "id":"tools",
     "children":[
       {
-        "caption":"SublimeREPL",
+        "caption":"SublimeREPL-ssh",
         "mnemonic":"r",
-        "id":"SublimeREPL",
+        "id":"SublimeREPL-ssh",
         "children":[
           {
             "caption":"Prolog (Sicstus)",

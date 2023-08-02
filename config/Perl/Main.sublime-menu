@@ -3,9 +3,9 @@
         "id": "tools",
         "children":
         [{
-            "caption": "SublimeREPL",
+            "caption": "SublimeREPL-ssh",
             "mnemonic": "R",
-            "id": "SublimeREPL",
+            "id": "SublimeREPL-ssh",
             "children":
             [
                 {"command": "repl_open", 
@@ -15,7 +15,7 @@
                  "args": {
                     "type": "subprocess",
                     "encoding": "utf8",
-                    "cmd": ["perl","${packages}/SublimeREPL/config/Perl/re.pl"],
+                    "cmd": ["perl","${packages}/SublimeREPL-ssh/config/Perl/re.pl"],
                     "cwd": "$file_path",
                     "external_id": "perl",
                     "syntax": "Packages/Perl/Perl.tmLanguage"

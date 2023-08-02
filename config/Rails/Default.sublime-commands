@@ -1,6 +1,6 @@
 [
     {
-        "caption": "SublimeREPL: Rails",
+        "caption": "SublimeREPL-ssh: Rails",
         "command": "run_existing_window_command",
         "args": {
             "id": "repl_rails",

@@ -1,6 +1,6 @@
 [
     {
-        "caption": "SublimeREPL: Ruby",
+        "caption": "SublimeREPL-ssh: Ruby",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_ruby",
@@ -8,7 +8,7 @@
         }
     },
     {
-        "caption": "SublimeREPL: Ruby IRB (deprecated)",
+        "caption": "SublimeREPL-ssh: Ruby IRB (deprecated)",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_ruby_irb",

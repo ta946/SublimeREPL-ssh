@@ -40,7 +40,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'SublimeREPL'
+project = 'SublimeREPL-ssh'
 copyright = '2012, Wojciech Bederski'
 
 # The version info for the project you're documenting, acts as replacement for

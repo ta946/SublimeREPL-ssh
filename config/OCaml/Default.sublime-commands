@@ -1,6 +1,6 @@
 [
     {
-        "caption": "SublimeREPL: OCaml",
+        "caption": "SublimeREPL-ssh: OCaml",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_ocaml",
@@ -8,7 +8,7 @@
         }
     },
     {
-        "caption": "SublimeREPL: OCaml utop",
+        "caption": "SublimeREPL-ssh: OCaml utop",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_ocaml_utop",

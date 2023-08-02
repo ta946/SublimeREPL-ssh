@@ -11,7 +11,7 @@ import shlex
 from functools import partial
 from contextlib import closing
 
-SETTINGS_FILE = "SublimeREPL.sublime-settings"
+SETTINGS_FILE = "SublimeREPL-ssh.sublime-settings"
 
 
 class ClojureAutoLeinConnectRepl(sublime_plugin.WindowCommand):
@@ -151,7 +151,7 @@ class PythonVirtualenvRepl(sublime_plugin.WindowCommand):
         self.window.show_quick_panel(nice_choices, partial(self.run_virtualenv, nice_choices))
 
     def _get_python_cmd(self, python_executable, directory):
-        return [python_executable, "-u", "${packages}/SublimeREPL/config/Python/ipy_repl.py"]
+        return [python_executable, "-u", "${packages}/SublimeREPL-ssh/config/Python/ipy_repl.py"]
 
 
 class PythonCustomShellVirtualenvRepl(PythonVirtualenvRepl):

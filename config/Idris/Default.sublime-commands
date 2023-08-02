@@ -1,6 +1,6 @@
 [
     {
-        "caption": "SublimeREPL: Idris",
+        "caption": "SublimeREPL-ssh: Idris",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_idris",

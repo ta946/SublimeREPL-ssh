@@ -4,12 +4,12 @@
 SublimeREPL
 ===========
 
-SublimeREPL is a plugin for Sublime Text 2 that lets you run interactive
+SublimeREPL-ssh is a plugin for Sublime Text 2 that lets you run interactive
 interpreters of several languages within a normal editor tab. It also allows
 connecting to a running remote interpreter (e.g. Clojure/Lein) though a telnet
 port.
 
-SublimeREPL has a built-in support for command history and transferring code
+SublimeREPL-ssh has a built-in support for command history and transferring code
 from open buffers to the interpreters for evaluation, enabling interactive 
 programming.
 
@@ -20,7 +20,7 @@ programming.
 Installation
 ------------
 
-Download `Package Control`__, select Install Package and pick SublimeREPL from the list of 
+Download `Package Control`__, select Install Package and pick SublimeREPL-ssh from the list of 
 available packages. You should have Package Control anyway.
 
 __  http://wbond.net/sublime_packages/package_control
@@ -29,7 +29,7 @@ __  http://wbond.net/sublime_packages/package_control
 Quick Start
 -----------
 
-SublimeREPL adds itself as a submenu in Tools. You can choose any one of the
+SublimeREPL-ssh adds itself as a submenu in Tools. You can choose any one of the
 preconfigured  REPLs and  if it's available in your SYSTEM PATH [#]_, it will
 be launched immediately.
 
@@ -38,11 +38,11 @@ be launched immediately.
 Second and more user friendly way to launch any given REPL is through Command
 Palette. Bring up Command Palette and type "repl". You will be presented with
 all preconfigured REPLs. Running REPL through Command Palette has exactly the
-same result as picking it from *Tools > SublimeREPL* menu.
+same result as picking it from *Tools > SublimeREPL-ssh* menu.
 
 .. image:: _static/palette.png
 
-.. [#] One of the most frequently reported errors is SublimeREPL not being able
+.. [#] One of the most frequently reported errors is SublimeREPL-ssh not being able
    to find interpreter executable, even if it's visible in your shell. There are several way to fix this problem that we'll discuss in FAQ. 
 
 You may now use a source buffer to either evaluate text from the buffer in
@@ -53,7 +53,7 @@ the REPL.
 Keyboard shortcuts
 ------------------
 
-The default shortcuts shipped with SublimeREPL are listed below. If you are
+The default shortcuts shipped with SublimeREPL-ssh are listed below. If you are
 accustomed to another REPL keymap, or if you intend to work in REPL a lot
 (lispers pay attention!) you may want to rebind the keys more to your liking.
 
@@ -110,7 +110,7 @@ Source buffer keys
 Language specific information 
 -----------------------------
  
-SublimeREPL's integration with a specific language includes language-specific
+SublimeREPL-ssh's integration with a specific language includes language-specific
 main menu and palette options for REPL startup, keymaps, and special REPL
 extensions unique to the target language. An integration may contain several
 different REPL modes which are based  on different underlying classes.
@@ -122,7 +122,7 @@ The Clojure integration supports Leiningen projects.
 You must install Leiningen to use Clojure integration.
 
 If your Leiningen installation is not system-global, you may need to tweak
-SublimeREPL configuration (via Preferences > Package Settings > SublimeREPL >
+SublimeREPL-ssh configuration (via Preferences > Package Settings > SublimeREPL-ssh >
 Settings - User) so that we can find your lein binary::
 
     "default_extend_env": {"PATH": "{PATH}:/home/myusername/bin"}
@@ -157,17 +157,17 @@ Python
 
 Both stock Python and Execnet integrations support virtualenv. Various ways to work with Python, including PDB and IPython, are supported.
 
-For virtualenv created environments to be discoverable by SublimeREPL they should be created or symlinked in one of the following:
+For virtualenv created environments to be discoverable by SublimeREPL-ssh they should be created or symlinked in one of the following:
 
 * ~/.virtualenvs default for `virtualenvwrapper`__
 * ~/.venvs default for `venv`__
 
-Alternatively, more paths can be added to "python_virtualenv_paths" in the SublimeREPL configuration file.
+Alternatively, more paths can be added to "python_virtualenv_paths" in the SublimeREPL-ssh configuration file.
 
 __ https://bitbucket.org/dhellmann/virtualenvwrapper
 __ https://github.com/wuub/venv
 
-Also, you can create custom shells via "custom_python_shells" option in the SublimeREPL configuration file. They will
+Also, you can create custom shells via "custom_python_shells" option in the SublimeREPL-ssh configuration file. They will
 be available through "Python - Custom shell" menu option. For example, you can configure django shell this way:
 "custom_python_shells": {"django": "my_django_project/manage.py shell"}. For more info see option description in
 the configuration file.
@@ -177,19 +177,19 @@ Documentation contributions from a Python specialist are welcome.
 Configuration
 -------------
 
-The default SublimeREPL configuration documents all available configuration settings.
+The default SublimeREPL-ssh configuration documents all available configuration settings.
 
 Frequently Asked Questions
 --------------------------
 
-**SublimeREPL can't launch the REPL process - OSError(2, 'No such file or directory'), how do I fix that?**
+**SublimeREPL-ssh can't launch the REPL process - OSError(2, 'No such file or directory'), how do I fix that?**
 
    Sublime is unable to locate the binary that is needed to launch your REPL in the search paths available to it. This is
    because the subprocess REPLs are launched, as, well, subprocesses of Sublime environment, which may be different from
    your interactive environment, especially if your REPL is installed in a directory that is not in a system-wide path (e.g 
    `/usr/local/bin` or '/home/myusername` on Linux, `My Documents` on Windows etc)
 
-   If the binary is not in your system path and you can't or won't change that, tweak SublimeREPL configuration::
+   If the binary is not in your system path and you can't or won't change that, tweak SublimeREPL-ssh configuration::
 
     {
      ...
@@ -211,7 +211,7 @@ Frequently Asked Questions
 Supported languages
 -------------------
 
-SublimeREPL currently ships with support for the following languages:
+SublimeREPL-ssh currently ships with support for the following languages:
 
 * Clisp
 * Clojure
@@ -242,7 +242,7 @@ SublimeREPL currently ships with support for the following languages:
 * Sublime internal REPL (?)
 * Tower (CoffeeScript)
 
-Structure of SublimeREPL 
+Structure of SublimeREPL-ssh 
 ------------------------
 
 .. NOTE::
@@ -255,14 +255,14 @@ Structure of SublimeREPL
 Basics of language integration: configuration and launch commands
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A language integration in SublimeREPL consists of configuration files and,
+A language integration in SublimeREPL-ssh consists of configuration files and,
 where needed, Python code. The configuration consists of:
 
 * Menu configuration files which specify the actual REPL object configuration
 * Command palette `configuration files <http://docs.sublimetext.info/en/latest/reference/command_palette.html>`_
 * Optional `keybinding configuration files <http://docs.sublimetext.info/en/latest/reference/key_bindings.html>`_ 
 
-REPLs are started by SublimeREPL command `repl_open`. The command and its
+REPLs are started by SublimeREPL-ssh command `repl_open`. The command and its
 arguments is usually specified in the menu configuration file, and the other
 places refer to that configuration item by file name and ID using the
 `run_existing_window_command` command.
@@ -280,9 +280,9 @@ The menu configuration file `config/Lua/Menu.sublime-menu` contains::
           "id": "tools",
           "children":
           [{
-              "caption": "SublimeREPL",
+              "caption": "SublimeREPL-ssh",
               "mnemonic": "R",
-              "id": "SublimeREPL",
+              "id": "SublimeREPL-ssh",
               "children":
               [
                   {"command": "repl_open", 
@@ -303,12 +303,12 @@ The menu configuration file `config/Lua/Menu.sublime-menu` contains::
       }
   ]
 
-This adds a "Lua" menu item to "Tools > SublimeREPL" which creates a Lua REPL
-via SublimeREPL command `repl_open`. The important part to take note of here
+This adds a "Lua" menu item to "Tools > SublimeREPL-ssh" which creates a Lua REPL
+via SublimeREPL-ssh command `repl_open`. The important part to take note of here
 is the `id` attribute (`repl_lua`). This is the ID by which the command
 palette configuration file refers to Lua REPL configuration.
 
-As you can see, the main way to launch a new REPL is the SublimeREPL command
+As you can see, the main way to launch a new REPL is the SublimeREPL-ssh command
 `repl_open` (class :class:`ReplOpenCommand`). The menu configuration file (see
 above) specifies the arguments for the command that are used to locate the
 desired REPL class and the settings for it so that it can be  spawned.
@@ -317,7 +317,7 @@ The command configuration file `config/Lua/Default.sublime-commands` looks like 
 
   [
       {
-          "caption": "SublimeREPL: Lua",
+          "caption": "SublimeREPL-ssh: Lua",
           "command": "run_existing_window_command", "args":
           {
               /* Note that both these arguments are used to identify the file above and 
@@ -349,7 +349,7 @@ REPL classes
 
 All REPL instances are descendants of :class:`Repl`. New integrations can
 either provide their own class, or use one of the base classes that ship with
-SublimeREPL:
+SublimeREPL-ssh:
 
 * Class :class:`SubprocessRepl` for  subprocess-based REPLs. The process
   running in the REPL is a subprocess of the editor. The input and   output of
@@ -367,7 +367,7 @@ There are three integrations that provide their own classes:
 
 All these can be found in the plugin's `repl/` subdirectory. 
 
-A REPL class is expected to provide a standard interface for SublimeREPL integration:
+A REPL class is expected to provide a standard interface for SublimeREPL-ssh integration:
 
 .. py:method:: read_bytes()
 

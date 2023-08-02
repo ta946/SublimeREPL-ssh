@@ -1,6 +1,6 @@
 [
     {
-        "caption": "SublimeREPL: PowerShell",
+        "caption": "SublimeREPL-ssh: PowerShell",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_powershell",

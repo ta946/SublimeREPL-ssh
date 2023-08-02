@@ -1,6 +1,6 @@
 [
     {
-        "caption": "SublimeREPL: Io",
+        "caption": "SublimeREPL-ssh: Io",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_io",

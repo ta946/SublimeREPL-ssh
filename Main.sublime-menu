@@ -3,9 +3,9 @@
         "id": "tools",
         "children":
         [{
-            "caption": "SublimeREPL",
+            "caption": "SublimeREPL-ssh",
             "mnemonic": "R",
-            "id": "SublimeREPL",
+            "id": "SublimeREPL-ssh",
             "children":
             [
                 {"caption": "Eval in REPL",
@@ -45,20 +45,20 @@
                 "children":
                 [
                     {
-                        "caption": "SublimeREPL",
+                        "caption": "SublimeREPL-ssh",
                         "children":
                         [
                             {
                                 "command": "open_file", "args":
                                 {
-                                    "file": "${packages}/SublimeREPL-ssh/SublimeREPL.sublime-settings"
+                                    "file": "${packages}/SublimeREPL-ssh/SublimeREPL-ssh.sublime-settings"
                                 },
                                 "caption": "Settings – Default"
                             },
                             {
                                 "command": "open_file", "args":
                                 {
-                                    "file": "${packages}/User/SublimeREPL.sublime-settings"
+                                    "file": "${packages}/User/SublimeREPL-ssh.sublime-settings"
                                 },
                                 "caption": "Settings – User"
                             },

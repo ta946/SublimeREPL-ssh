@@ -13,13 +13,13 @@ SUBLIMEREPL_USER_DIR = None
 def plugin_loaded():
     global SUBLIMEREPL_DIR
     global SUBLIMEREPL_USER_DIR
-    SUBLIMEREPL_DIR = "Packages/SublimeREPL"
-    SUBLIMEREPL_USER_DIR = os.path.join(sublime.packages_path(), "User", "SublimeREPL")
+    SUBLIMEREPL_DIR = "Packages/SublimeREPL-ssh"
+    SUBLIMEREPL_USER_DIR = os.path.join(sublime.packages_path(), "User", "SublimeREPL-ssh")
 
 PY2 = False
 if sys.version_info[0] == 2:
     SUBLIMEREPL_DIR = os.getcwdu()
-    SUBLIMEREPL_USER_DIR = os.path.join(sublime.packages_path(), "User", "SublimeREPL")
+    SUBLIMEREPL_USER_DIR = os.path.join(sublime.packages_path(), "User", "SublimeREPL-ssh")
     PY2 = True
 
 # yes, CommandCommmand :) 

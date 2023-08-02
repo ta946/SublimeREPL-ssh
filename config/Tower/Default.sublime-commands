@@ -1,6 +1,6 @@
 [
     {
-        "caption": "SublimeREPL: Tower Console",
+        "caption": "SublimeREPL-ssh: Tower Console",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_tower",

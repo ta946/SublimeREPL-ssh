@@ -31,7 +31,7 @@ except ImportError:
     PY2 = True
 
 PLATFORM = sublime.platform().lower()
-SETTINGS_FILE = 'SublimeREPL.sublime-settings'
+SETTINGS_FILE = 'SublimeREPL-ssh.sublime-settings'
 SUBLIME2 = sublime.version() < '3000'
 
 RESTART_MSG = """

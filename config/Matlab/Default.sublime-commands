@@ -1,6 +1,6 @@
 [
     {
-        "caption": "SublimeREPL: Matlab",
+        "caption": "SublimeREPL-ssh: Matlab",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_matlab",

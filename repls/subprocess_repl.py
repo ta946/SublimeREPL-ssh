@@ -58,7 +58,7 @@ class SubprocessRepl(Repl):
 
     def __init__(self, encoding, cmd=None, env=None, cwd=None, extend_env=None, soft_quit="", autocomplete_server=False, **kwds):
         super(SubprocessRepl, self).__init__(encoding, **kwds)
-        settings = load_settings('SublimeREPL.sublime-settings')
+        settings = load_settings('SublimeREPL-ssh.sublime-settings')
 
         if cmd[0] == "[unsupported]":
             raise Unsupported(cmd[1:])
@@ -162,7 +162,7 @@ class SubprocessRepl(Repl):
                 import traceback
                 traceback.print_exc()
                 error_message(
-                    "SublimeREPL: obtaining sane environment failed in getenv()\n"
+                    "SublimeREPL-ssh: obtaining sane environment failed in getenv()\n"
                     "Check console and 'getenv_command' setting \n"
                     "WARN: Falling back to SublimeText environment")
 

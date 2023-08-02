@@ -3,9 +3,9 @@
     "id":"tools",
     "children":[
       {
-        "caption":"SublimeREPL",
+        "caption":"SublimeREPL-ssh",
         "mnemonic":"R",
-        "id":"SublimeREPL",
+        "id":"SublimeREPL-ssh",
         "children":[
           {
             "caption":"Ruby",
@@ -22,17 +22,17 @@
                   "cmd":{
                     "windows":[
                       "ruby.exe",
-                      "${packages}/SublimeREPL/config/Ruby/pry_repl.rb",
+                      "${packages}/SublimeREPL-ssh/config/Ruby/pry_repl.rb",
                       "$editor"
                     ],
                     "linux":[
                       "ruby",
-                      "${packages}/SublimeREPL/config/Ruby/pry_repl.rb",
+                      "${packages}/SublimeREPL-ssh/config/Ruby/pry_repl.rb",
                       "$editor"
                     ],
                     "osx":[
                       "ruby",
-                      "${packages}/SublimeREPL/config/Ruby/pry_repl.rb",
+                      "${packages}/SublimeREPL-ssh/config/Ruby/pry_repl.rb",
                       "$editor"
                     ]
                   },

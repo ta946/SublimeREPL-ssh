@@ -1,6 +1,6 @@
 [
     {
-        "caption": "SublimeREPL: Racket",
+        "caption": "SublimeREPL-ssh: Racket",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_plt_racket",

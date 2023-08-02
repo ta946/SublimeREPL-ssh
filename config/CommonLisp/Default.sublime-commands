@@ -1,6 +1,6 @@
 [
     {
-        "caption": "SublimeREPL: Clozure CL",
+        "caption": "SublimeREPL-ssh: Clozure CL",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_ccl",
@@ -8,7 +8,7 @@
         }
     },
     {
-        "caption": "SublimeREPL: SBCL",
+        "caption": "SublimeREPL-ssh: SBCL",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_sbcl",
@@ -16,7 +16,7 @@
         }
     },
     {
-        "caption": "SublimeREPL: GNU Clisp",
+        "caption": "SublimeREPL-ssh: GNU Clisp",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_clisp",
@@ -24,7 +24,7 @@
         }
     },
     {
-        "caption": "SublimeREPL: Allegro CL",
+        "caption": "SublimeREPL-ssh: Allegro CL",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_allegro",
@@ -32,7 +32,7 @@
         }
     },
     {
-        "caption": "SublimeREPL: ABCL",
+        "caption": "SublimeREPL-ssh: ABCL",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_abcl",
@@ -40,7 +40,7 @@
         }
     },
     {
-        "caption": "SublimeREPL: CMUCL",
+        "caption": "SublimeREPL-ssh: CMUCL",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_cmucl",
@@ -48,7 +48,7 @@
         }
     },
     {
-        "caption": "SublimeREPL: ECL",
+        "caption": "SublimeREPL-ssh: ECL",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_ecl",

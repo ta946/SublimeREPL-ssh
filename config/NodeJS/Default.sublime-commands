@@ -1,6 +1,6 @@
 [
     {
-        "caption": "SublimeREPL: Node",
+        "caption": "SublimeREPL-ssh: Node",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_node",

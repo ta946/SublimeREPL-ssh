@@ -1,9 +1,9 @@
 {
     "schema_version": "3.0.0",
     "packages": [{
-        "name": "SublimeREPL",
-        "details": "https://github.com/wuub/SublimeREPL",
-        "description": "SublimeREPL - run an interpreter inside ST2 (Clojure, CoffeeScript, F#, Groovy, Haskell, Lua, MozRepl, NodeJS, Python + virtualenv, R, Ruby, Scala...)",
+        "name": "SublimeREPL-ssh",
+        "details": "https://github.com/ta946/SublimeREPL-ssh",
+        "description": "SublimeREPL-ssh - run an interpreter inside Sublime Text (Clojure, CoffeeScript, F#, Groovy, Haskell, Lua, MozRepl, NodeJS, Python + virtualenv, R, Ruby, Scala...)",
         "releases": [
             {
                 "sublime_text": "*",

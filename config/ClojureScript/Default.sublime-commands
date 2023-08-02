@@ -1,6 +1,6 @@
 [
     {
-        "caption": "SublimeREPL: ClojureScript Browser REPL",
+        "caption": "SublimeREPL-ssh: ClojureScript Browser REPL",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_clojurescript_browser",
@@ -8,7 +8,7 @@
         }
     },
     {
-        "caption": "SublimeREPL: ClojureScript Figwheel REPL",
+        "caption": "SublimeREPL-ssh: ClojureScript Figwheel REPL",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_clojurescript_figwheel",
@@ -16,7 +16,7 @@
         }
     },
     {
-        "caption": "SublimeREPL: ClojureScript",
+        "caption": "SublimeREPL-ssh: ClojureScript",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_clojurescript",

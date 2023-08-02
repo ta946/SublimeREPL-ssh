@@ -1,6 +1,6 @@
 [
     {
-        "caption": "SublimeREPL: Scheme",
+        "caption": "SublimeREPL-ssh: Scheme",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_scheme",
@@ -8,7 +8,7 @@
         }
     },
     {
-        "caption": "SublimeREPL: Gauche",
+        "caption": "SublimeREPL-ssh: Gauche",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_gauche",
@@ -16,7 +16,7 @@
         }
     },
     {
-        "caption": "SublimeREPL: Petite Chez Scheme",
+        "caption": "SublimeREPL-ssh: Petite Chez Scheme",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_petite",

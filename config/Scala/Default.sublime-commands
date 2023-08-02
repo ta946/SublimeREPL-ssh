@@ -1,6 +1,6 @@
 [
 	{
-        "caption": "SublimeREPL: Scala",
+        "caption": "SublimeREPL-ssh: Scala",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_scala",
@@ -8,7 +8,7 @@
         }
     },
     {
-        "caption": "SublimeREPL: SBT for opened folder",
+        "caption": "SublimeREPL-ssh: SBT for opened folder",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_sbt",

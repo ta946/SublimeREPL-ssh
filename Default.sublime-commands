@@ -1,6 +1,6 @@
 [
     {
-        "caption": "SublimeREPL: Restart REPL",
+        "caption": "SublimeREPL-ssh: Restart REPL",
         "command": "repl_restart"
     }
 ]

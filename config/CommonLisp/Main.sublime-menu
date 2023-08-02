@@ -3,9 +3,9 @@
         "id": "tools",
         "children":
         [{
-            "caption": "SublimeREPL",
+            "caption": "SublimeREPL-ssh",
             "mnemonic": "R",
-            "id": "SublimeREPL",
+            "id": "SublimeREPL-ssh",
             "children":
             [
                 {"caption": "Common Lisp",

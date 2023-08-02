@@ -1,6 +1,6 @@
 [
     {
-        "caption": "SublimeREPL: Clojure",
+        "caption": "SublimeREPL-ssh: Clojure",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_clojure",
@@ -8,7 +8,7 @@
         }
     },
     {
-        "caption": "SublimeREPL: Clojure-Telnet",
+        "caption": "SublimeREPL-ssh: Clojure-Telnet",
         "command": "run_existing_window_command", "args":
         {
             "id": "repl_clojure_telnet",
