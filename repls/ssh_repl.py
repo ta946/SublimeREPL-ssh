@@ -1,4 +1,5 @@
 import re
+from time import sleep
 
 from .subprocess_repl import SubprocessRepl
 
@@ -35,6 +36,8 @@ class SshRepl(SubprocessRepl):
             _bytes = out.read1(self._read_buffer)
             if not _bytes:
                 return
+            if len(_bytes) == self._read_buffer:
+                sleep(0.001)
             _bytes = self._post_process_line(_bytes)
             if _bytes:
                 return _bytes

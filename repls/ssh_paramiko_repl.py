@@ -1,4 +1,5 @@
 import re
+from time import sleep
 
 import signal
 import paramiko
@@ -20,6 +21,7 @@ class SshParamikoRepl(Repl):
         self._channel = None
         self._alive = False
         self._killed = False
+        self._read_buffer = 4096
 
         self._ansi_escape_8bit = re.compile(br'(?:\x1B[@-Z\\-_]|[\x80-\x9A\x9C-\x9F]|(?:\x1B\[|\x9B)[0-?]*[ -/]*[@-~])')
 
@@ -62,9 +64,11 @@ class SshParamikoRepl(Repl):
 
     def read_bytes(self):
         while True:
-            _bytes = self._channel.recv(4096)
+            _bytes = self._channel.recv(self._read_buffer)
             if not _bytes:
                 return
+            if len(_bytes) == self._read_buffer:
+                sleep(0.001)
             _bytes = _bytes.replace(b'\r',b'')
             _bytes = self._ansi_escape_8bit.sub(b'', _bytes)
             if _bytes:
