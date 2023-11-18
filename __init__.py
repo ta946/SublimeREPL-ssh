@@ -33,3 +33,5 @@ if sys.platform.startswith('win'):
             CAN_USE_PARAMIKO = True
         except (ModuleNotFoundError,ImportError):
             pass
+
+    from .repls import *

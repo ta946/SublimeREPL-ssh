@@ -8,6 +8,7 @@ import subprocess
 import os
 import sys
 from .repl import Repl
+from ..sublimerepl import SETTINGS_FILE
 import signal
 from sublime import load_settings, error_message
 from .autocomplete_server import AutocompleteServer
@@ -58,7 +59,7 @@ class SubprocessRepl(Repl):
 
     def __init__(self, encoding, cmd=None, env=None, cwd=None, extend_env=None, soft_quit="", autocomplete_server=False, **kwds):
         super(SubprocessRepl, self).__init__(encoding, **kwds)
-        settings = load_settings('SublimeREPL-ssh.sublime-settings')
+        settings = load_settings(SETTINGS_FILE)
 
         if cmd[0] == "[unsupported]":
             raise Unsupported(cmd[1:])

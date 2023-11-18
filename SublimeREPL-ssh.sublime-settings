@@ -104,5 +104,11 @@
     // If using windows and set to true, repl will use paramiko for ssh
     // if dependancies are able to be set up correctly.
     // Else subprocess repl will be used.
-    "use_paramiko": true
+    "use_paramiko": true,
+
+    // If using windows and use_paramiko is true and depenancies are setup correctly.
+    // allow editing file on server from within sublime by intercepting when you type
+    // "vi ./folder/file_to_edit.txt", instead it will download file_to_edit.txt and open in new tab.
+    // then on save, file_to_edit.txt is uploaded to server.
+    "paramiko_intercept_vi": false
 }
