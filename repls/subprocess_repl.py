@@ -82,6 +82,10 @@ class SubprocessRepl(Repl):
         self._cmd = self.cmd(cmd, env)
         self._soft_quit = soft_quit
         self._killed = False
+
+        self._open(settings, cwd, env)
+
+    def _open(self, settings, cwd, env):
         self.popen = Popen(
                         self._cmd,
                         startupinfo=self.startupinfo(settings),
@@ -245,11 +249,9 @@ class SubprocessRepl(Repl):
                     continue
                 return byte
 
-
-
-    def write_bytes(self, bytes):
+    def write_bytes(self, _bytes):
         si = self.popen.stdin
-        si.write(bytes)
+        si.write(_bytes)
         si.flush()
 
     def kill(self):

@@ -50,10 +50,12 @@ class ViInterceptor:
             msg = b'pwd\n'
             self._repl._channel.sendall(msg)
             _bytes = b''
-            while msg not in _bytes:
+            for _ in range(5):
                 _bytes = self._recv_Q.get()
-            if _bytes == msg:
-                _bytes = self._recv_Q.get()
+                if b'/' in _bytes:
+                    break
+            if b'/' not in _bytes:
+                return None
             index = _bytes.index(b'/')
             cwd = _bytes[index:].decode()
             if '\n' in cwd:
@@ -107,6 +109,8 @@ class ViInterceptor:
             path = path[2:]
         if not path.startswith('/'):
             parent = self._get_cwd()
+            if parent is None:
+                return True
             path = os.path.join(parent, path).replace('\\','/')
         out_path = self._get_file(path)
         if out_path is not None:
