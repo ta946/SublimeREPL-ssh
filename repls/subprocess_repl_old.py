@@ -7,10 +7,7 @@ from __future__ import absolute_import, unicode_literals, print_function, divisi
 import subprocess
 import os
 import sys
-import re
-from time import sleep
 from .repl import Repl
-from ..sublimerepl import SETTINGS_FILE, READ_BUFFER
 import signal
 from sublime import load_settings, error_message
 from .autocomplete_server import AutocompleteServer
@@ -57,13 +54,11 @@ def win_find_executable(executable, env):
 
 
 class SubprocessRepl(Repl):
-    TYPE = "subprocess"
-    _read_buffer = READ_BUFFER
-    _ansi_escape_8bit = re.compile(br'(?:\x1B[@-Z\\-_]|[\x80-\x9A\x9C-\x9F]|(?:\x1B\[|\x9B)[0-?]*[ -/]*[@-~])')
+    TYPE = "subprocess_old"
 
     def __init__(self, encoding, cmd=None, env=None, cwd=None, extend_env=None, soft_quit="", autocomplete_server=False, **kwds):
         super(SubprocessRepl, self).__init__(encoding, **kwds)
-        settings = load_settings(SETTINGS_FILE)
+        settings = load_settings('SublimeREPL-ssh.sublime-settings')
 
         if cmd[0] == "[unsupported]":
             raise Unsupported(cmd[1:])
@@ -86,15 +81,11 @@ class SubprocessRepl(Repl):
         self._cmd = self.cmd(cmd, env)
         self._soft_quit = soft_quit
         self._killed = False
-
-        self._open(settings, cwd, env)
-
-    def _open(self, settings, cwd, env):
         self.popen = Popen(
                         self._cmd,
                         startupinfo=self.startupinfo(settings),
                         creationflags=self.creationflags(settings),
-                        bufsize=self._read_buffer,
+                        bufsize=1,
                         cwd=self.cwd(cwd, settings),
                         env=env,
                         stderr=subprocess.STDOUT,
@@ -228,41 +219,36 @@ class SubprocessRepl(Repl):
         return " ".join([str(x) for x in self._cmd])
 
     def is_alive(self):
-        # if self._killed:
-        #     return False
         try:
             ret = self.popen.poll() is None
         except OSError:
             ret = False
         return ret
 
-    def _read(self):
-        _bytes = self.popen.stdout.read1(self._read_buffer)
-        return _bytes
-
-    def _post_process(self, _bytes):
-        _bytes = _bytes.replace(b'\r\n',b'\n')
-        # _bytes = self._ansi_escape_8bit.sub(b'', _bytes)
-        return _bytes
-
-    def _recv(self):
-        _bytes = self._read()
-        if not _bytes:
-            return False, None
-        _bytes = self._post_process(_bytes)
-        return True, _bytes
-
     def read_bytes(self):
-        while True:
-            ret, _bytes = self._recv()
-            if not ret:
-                return
-            elif _bytes:
-                return _bytes
+        out = self.popen.stdout
+        if POSIX:
+            while True:
+                i, _, _ = select.select([out], [], [])
+                if i:
+                    return out.read(4096)
+        else:
+            # this is windows specific problem, that you cannot tell if there
+            # are more bytes ready, so we read only 1 at a times
 
-    def write_bytes(self, _bytes):
+            while True:
+                byte = self.popen.stdout.read(1)
+                if byte == b'\r':
+                    # f'in HACK, for \r\n -> \n translation on windows
+                    # I tried universal_endlines but it was pain and misery! :'(
+                    continue
+                return byte
+
+
+
+    def write_bytes(self, bytes):
         si = self.popen.stdin
-        si.write(_bytes)
+        si.write(bytes)
         si.flush()
 
     def kill(self):
@@ -283,4 +269,4 @@ class SubprocessRepl(Repl):
             self._killed = True
         if self.is_alive():
             self.popen.send_signal(sig)
-        self._rv.clear_queue()
+

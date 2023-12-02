@@ -6,40 +6,42 @@ from __future__ import absolute_import, unicode_literals, print_function, divisi
 
 import re
 import os
-import sys
 import os.path
 import threading
-import traceback
 from datetime import datetime
 
 import sublime
 import sublime_plugin
 
+# ANSI_ESCAPE_8BIT_REGEX_STR = r'(?:\x1B[0-Z\\-_]|[\x80-\x9A\x9C-\x9F]|(?:\x1B\[|\x9B)[0-?]*[ -/]*[@-~])'
+ANSI_ESCAPE_8BIT_REGEX_STR = r'(?:\x1B[0-Z\\-_]|[\x80-\x9A\x9C-\x9F]|(?:\x1b\[\??\d*[;|\d*]*[a-zA-Z]))'
+ANSI_ESCAPE_8BIT_REGEX = re.compile(ANSI_ESCAPE_8BIT_REGEX_STR, re.IGNORECASE)
+ANSI_ESCAPE_8BIT_REGEX_BYTES = re.compile(ANSI_ESCAPE_8BIT_REGEX_STR.encode(), re.IGNORECASE)
+ANSI_ESCAPE_ALLOWCOLOR_REGEX_STR = r'(?:\x1B[0-Z\\-_]|[\x80-\x9A\x9C-\x9F]|(?:\x1b\[\??\d*[;|\d*]*((?!m)[a-zA-Z])))'
+ANSI_ESCAPE_ALLOWCOLOR_REGEX = re.compile(ANSI_ESCAPE_ALLOWCOLOR_REGEX_STR, re.IGNORECASE)
+ANSI_ESCAPE_ALLOWCOLOR_REGEX_BYTES = re.compile(ANSI_ESCAPE_ALLOWCOLOR_REGEX_STR.encode(), re.IGNORECASE)
+ANSI_COLOR_REGEX_STR = r'(\033\[\d*(?:;\d*)?\w|.\x08|\x01\x02)'
+ANSI_COLOR_REGEX = re.compile(ANSI_COLOR_REGEX_STR)
+
 try:
     import queue
-    from . import sublimerepl_build_system_hack
-    from . import repls
+    from .ansi import ansi_control, ansi_color_utils
     from .repllibs import PyDbLite
-    unicode_type = str
-    PY2 = False
 except ImportError:
-    import sublimerepl_build_system_hack
-    import repls
+    from ansi import ansi_control, ansi_color_utils
     from repllibs import PyDbLite
     import Queue as queue
-    unicode_type = unicode
-    PY2 = True
-from . import CAN_USE_PARAMIKO
+from . import SETTINGS_FILE
 
-PLATFORM = sublime.platform().lower()
-SETTINGS_FILE = 'SublimeREPL-ssh.sublime-settings'
+# import importlib; importlib.reload(repls.subprocess_repl);
+# import importlib; importlib.reload(ansi_control);
+
 SUBLIME2 = sublime.version() < '3000'
+# READ_BUFFER = 1024
+# READ_BUFFER = 2048
+# READ_BUFFER = 8192
+READ_BUFFER = 32_768
 
-RESTART_MSG = """
-#############
-## RESTART ##
-#############
-"""
 
 class ReplInsertTextCommand(sublime_plugin.TextCommand):
     def run(self, edit, pos, text):
@@ -151,12 +153,15 @@ class PersistentHistory(MemHistory):
 
 class ReplView(object):
     def __init__(self, view, repl, syntax, repl_restart_args):
+        self._ansi_controller = None
         self.repl = repl
+        self.repl._rv = self
         self._view = view
         self._window = view.window()
         self._repl_launch_args = repl_restart_args
         # list of callable(repl) to handle view close events
         self.call_on_close = []
+        self._read_buffer = READ_BUFFER
 
         if syntax:
             view.set_syntax_file(syntax)
@@ -190,6 +195,12 @@ class ReplView(object):
         self._history_match = None
 
         self._filter_color_codes = settings.get("filter_ascii_color_codes")
+        self._emulate_ansi_csi = settings.get("emulate_ansi_csi")
+        if self._emulate_ansi_csi:
+            self._ansi_controller = ansi_control.AnsiControl(self, is_ansi_allow_color=not self._filter_color_codes)
+            if not self._filter_color_codes:
+                ansi_color_utils.init_ansi_color(self)
+        self._ansi_escape_8bit_regex = ANSI_ESCAPE_8BIT_REGEX
 
         # optionally move view to a different group
         # find current position of this replview
@@ -317,18 +328,22 @@ class ReplView(object):
             v.run_command("repl_erase_text", {"start": self._output_end, "end": vsize})
         else:
             self._output_end = self._view.size()
+        if self._emulate_ansi_csi:
+            self._ansi_controller._cursor_pos = self._output_end
 
     def write(self, unistr):
         """Writes output from Repl into this view."""
-        # remove color codes
-        if self._filter_color_codes:
-            unistr = re.sub(r'\033\[\d*(;\d*)?\w', '', unistr)
-            unistr = re.sub(r'.\x08', '', unistr)
-            unistr = re.sub(r'\x01\x02', '', unistr)
+        if self._emulate_ansi_csi:
+            self._ansi_controller.run(unistr)
+        else:
+            # remove color codes
+            if self._filter_color_codes:
+                unistr = self._ansi_escape_8bit_regex.sub('', unistr)
+                unistr = ANSI_COLOR_REGEX.sub('', unistr)
 
-        # string is assumed to be already correctly encoded
-        self._view.run_command("repl_insert_text", {"pos": self._output_end - self._prompt_size, "text": unistr})
-        self._output_end += len(unistr)
+            # string is assumed to be already correctly encoded
+            self._view.run_command("repl_insert_text", {"pos": self._output_end - self._prompt_size, "text": unistr})
+            self._output_end += len(unistr)
         self._view.show(self.input_region)
 
     def write_prompt(self, unistr):
@@ -344,19 +359,30 @@ class ReplView(object):
         else:
             self._view.run_command("repl_insert_text", {"pos": self._view.size(), "text": text})
 
+    def clear_queue(self):
+        with self._repl_reader.queue.mutex:
+            self._repl_reader.queue.queue.clear()
+
     def handle_repl_output(self):
         """Returns new data from Repl and bool indicating if Repl is still
            working"""
+        ret = True
+        text = ''
         try:
-            while True:
+            while self.repl.is_alive():
                 packet = self._repl_reader.queue.get_nowait()
                 if packet is None:
-                    return False
-
-                self.handle_repl_packet(packet)
-
+                    ret = False
+                    break
+                text += packet
+                if len(text) >= self._read_buffer:
+                    self.handle_repl_packet(text)
+                    text = ''
         except queue.Empty:
-            return True
+            pass
+        if len(text):
+            self.handle_repl_packet(text)
+        return ret
 
     def handle_repl_packet(self, packet):
         if self.repl.apiv2:
@@ -376,18 +402,24 @@ class ReplView(object):
         else:
             self.write(packet)
 
+    def _update_view_loop(self):
+        from time import sleep
+        is_still_working = True
+        while is_still_working:
+            is_still_working = self.handle_repl_output()
+            sleep(0.01)
+
+        self.write("\n***Repl Killed***\n""" if self.repl._killed else "\n***Repl Closed***\n""")
+        self._view.set_read_only(True)
+        if sublime.load_settings(SETTINGS_FILE).get("view_auto_close"):
+            window = self._view.window()
+            if window is not None:
+                window.focus_view(self._view)
+                window.run_command("close")
+
     def update_view_loop(self):
-        is_still_working = self.handle_repl_output()
-        if is_still_working:
-            sublime.set_timeout(self.update_view_loop, 100)
-        else:
-            self.write("\n***Repl Killed***\n""" if self.repl._killed else "\n***Repl Closed***\n""")
-            self._view.set_read_only(True)
-            if sublime.load_settings(SETTINGS_FILE).get("view_auto_close"):
-                window = self._view.window()
-                if window is not None:
-                    window.focus_view(self._view)
-                    window.run_command("close")
+        self._t = threading.Thread(target=self._update_view_loop)
+        self._t.start()
 
     def push_history(self, command):
         self._history.push(command)
@@ -450,373 +482,3 @@ class ReplView(object):
             if sel.begin() < output_end or sel.end() < output_end:
                 return False
         return True
-
-
-class ReplManager(object):
-
-    def __init__(self):
-        self.repl_views = {}
-
-    def repl_view(self, view):
-        repl_id = view.settings().get("repl_id")
-        if repl_id not in self.repl_views:
-            return None
-        rv = self.repl_views[repl_id]
-        rv.update_view(view)
-        return rv
-
-    def find_repl(self, external_id):
-        """Yields rvews matching external_id taken from source.[external_id] scope
-           Match is done on external_id value of repl and additional_scopes"""
-        for rv in self.repl_views.values():
-            if not (rv.repl and rv.repl.is_alive()):
-                continue  # dead repl, skip
-            rvid = rv.external_id
-            additional_scopes = rv.repl.additional_scopes
-            if rvid == external_id or external_id in additional_scopes:
-                yield rv
-
-    @staticmethod
-    def _check_paramiko(type, kwds):
-        if type.upper() != 'SSH_PARAMIKO':
-            return type, kwds
-        if not sublime.load_settings(SETTINGS_FILE).get("use_paramiko", False) or not CAN_USE_PARAMIKO:
-            type = 'ssh'
-            user = kwds.pop('user')
-            ip = kwds.pop('ip')
-            key = kwds.pop('key')
-            kwds['cmd'] = ["ssh", "-tt", "-i", key, f"{user}@{ip}"]
-        return type, kwds
-
-    def open(self, window, encoding, type, syntax=None, view_id=None, title=None, **kwds):
-        type, kwds = self._check_paramiko(type, kwds)
-        repl_restart_args = {
-            'encoding': encoding,
-            'type': type,
-            'syntax': syntax,
-        }
-        repl_restart_args.update(kwds)
-        try:
-            kwds = ReplManager.translate(window, kwds)
-            encoding = ReplManager.translate(window, encoding)
-            r = repls.Repl.subclass(type)(encoding, **kwds)
-            found = None
-            for view in window.views():
-                if view.id() == view_id:
-                    found = view
-                    break
-            view = found or window.new_file()
-
-            rv = ReplView(view, r, syntax, repl_restart_args)
-            rv.call_on_close.append(self._delete_repl)
-            self.repl_views[r.id] = rv
-            view.set_scratch(True)
-            if title is None:
-                title = "*REPL* [%s]" % (r.name(),)
-            view.set_name(title)
-            return rv
-        except Exception as e:
-            traceback.print_exc()
-            sublime.error_message(repr(e))
-
-    def restart(self, view, edit):
-        repl_restart_args = view.settings().get("repl_restart_args")
-        if not repl_restart_args:
-            sublime.message_dialog("No restart parameters found")
-            return False
-        rv = self.repl_view(view)
-        if rv:
-            if rv.repl and rv.repl.is_alive() and not sublime.ok_cancel_dialog("Still running. Really restart?"):
-                return False
-            rv.on_close()  # yes on_close, delete rv from
-
-        view.insert(edit, view.size(), RESTART_MSG)
-        repl_restart_args["view_id"] = view.id()
-        self.open(view.window(), **repl_restart_args)
-        return True
-
-    def _delete_repl(self, repl_view):
-        repl_id = repl_view.repl.id
-        if repl_id not in self.repl_views:
-            return None
-        del self.repl_views[repl_id]
-
-    @staticmethod
-    def translate(window, obj, subst=None):
-        if subst is None:
-            subst = ReplManager._subst_for_translate(window)
-        if isinstance(obj, dict):
-            return ReplManager._translate_dict(window, obj, subst)
-        if isinstance(obj, unicode_type):  # PY2
-            return ReplManager._translate_string(window, obj, subst)
-        if isinstance(obj, list):
-            return ReplManager._translate_list(window, obj, subst)
-        return obj
-
-    @staticmethod
-    def _subst_for_translate(window):
-        """ Return all available substitutions"""
-        import locale
-        res = {
-            "packages": sublime.packages_path(),
-            "installed_packages": sublime.installed_packages_path()
-        }
-        if window.folders():
-            res["folder"] = window.folders()[0]
-        res["editor"] = "subl -w"
-        res["win_cmd_encoding"] = "utf8"
-        if sublime.platform() == "windows":
-            res["win_cmd_encoding"] = locale.getdefaultlocale()[1]
-            res["editor"] = '"%s"' % (sys.executable,)
-        av = window.active_view()
-        if av is None:
-            return res
-        filename = av.file_name()
-        if not filename:
-            return res
-        filename = os.path.abspath(filename)
-        res["file"] = filename
-        res["file_path"] = os.path.dirname(filename)
-        res["file_basename"] = os.path.basename(filename)
-        if 'folder' not in res:
-            res["folder"] = res["file_path"]
-
-        if sublime.load_settings(SETTINGS_FILE).get("use_build_system_hack", False):
-            project_settings = sublimerepl_build_system_hack.get_project_settings(window)
-            res.update(project_settings)
-
-        return res
-
-    @staticmethod
-    def _translate_string(window, string, subst=None):
-        from string import Template
-        if subst is None:
-            subst = ReplManager._subst_for_translate(window)
-
-        # see #200, on older OSX (10.6.8) system wide python won't accept
-        # dict(unicode -> unicode) as **argument.
-        # It's best to just str() keys, since they are ascii anyway
-        if PY2:
-            subst = dict((str(key), val) for key, val in subst.items())
-
-        return Template(string).safe_substitute(**subst)
-
-    @staticmethod
-    def _translate_list(window, list, subst=None):
-        if subst is None:
-            subst = ReplManager._subst_for_translate(window)
-        return [ReplManager.translate(window, x, subst) for x in list]
-
-    @staticmethod
-    def _translate_dict(window, dictionary, subst=None):
-        if subst is None:
-            subst = ReplManager._subst_for_translate(window)
-        if PLATFORM in dictionary:
-            return ReplManager.translate(window, dictionary[PLATFORM], subst)
-        for k, v in list(dictionary.items()):
-            dictionary[k] = ReplManager.translate(window, v, subst)
-        return dictionary
-
-manager = ReplManager()
-
-# Window Commands #########################################
-
-
-# Opens a new REPL
-class ReplOpenCommand(sublime_plugin.WindowCommand):
-    def run(self, encoding, type, syntax=None, view_id=None, **kwds):
-        manager.open(self.window, encoding, type, syntax, view_id, **kwds)
-
-
-class ReplRestartCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        manager.restart(self.view, edit)
-
-    def is_visible(self):
-        if not self.view:
-            return False
-        return bool(self.view.settings().get("repl_restart_args", None))
-
-    def is_enabled(self):
-        return self.is_visible()
-
-# REPL Comands ############################################
-
-
-# Submits the Command to the REPL
-class ReplEnterCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        rv = manager.repl_view(self.view)
-        if rv:
-            rv.enter()
-
-
-class ReplClearCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        rv = manager.repl_view(self.view)
-        if rv:
-            rv.clear(edit)
-
-
-# Resets Repl Command Line
-class ReplEscapeCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        rv = manager.repl_view(self.view)
-        if rv:
-            rv.escape(edit)
-
-
-def repl_view_delta(sublime_view):
-    """Return a repl_view and number of characters from current selection
-    to then beggingin of user_input (otherwise known as _output_end)"""
-    rv = manager.repl_view(sublime_view)
-    if not rv:
-        return None, -1
-    delta = rv._output_end - sublime_view.sel()[0].begin()
-    return rv, delta
-
-
-class ReplBackspaceCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        rv = manager.repl_view(self.view)
-        if rv:
-            rv.on_backspace()
-
-
-class ReplCtrlBackspaceCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        rv = manager.repl_view(self.view)
-        if rv:
-            rv.on_ctrl_backspace()
-
-
-class ReplSuperBackspaceCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        rv = manager.repl_view(self.view)
-        if rv:
-            rv.on_super_backspace()
-
-
-class ReplLeftCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        rv = manager.repl_view(self.view)
-        if rv:
-            rv.on_left()
-
-
-class ReplShiftLeftCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        rv = manager.repl_view(self.view)
-        if rv:
-            rv.on_shift_left()
-
-
-class ReplHomeCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        rv = manager.repl_view(self.view)
-        if rv:
-            rv.on_home()
-
-
-class ReplShiftHomeCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        rv = manager.repl_view(self.view)
-        if rv:
-            rv.on_shift_home()
-
-
-class ReplViewPreviousCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        rv = manager.repl_view(self.view)
-        if rv:
-            rv.previous_command(edit)
-
-
-class ReplViewNextCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        rv = manager.repl_view(self.view)
-        if rv:
-            rv.next_command(edit)
-
-
-class ReplKillCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        rv = manager.repl_view(self.view)
-        if rv:
-            rv.repl.kill()
-
-    def is_visible(self):
-        rv = manager.repl_view(self.view)
-        return bool(rv)
-
-    def is_enabled(self):
-        return self.is_visible()
-
-
-class SublimeReplListener(sublime_plugin.EventListener):
-    def on_selection_modified(self, view):
-        rv = manager.repl_view(view)
-        if rv:
-            rv.on_selection_modified()
-
-    def on_close(self, view):
-        rv = manager.repl_view(view)
-        if rv:
-            rv.on_close()
-
-    def on_text_command(self, view, command_name, args):
-        rv = manager.repl_view(view)
-        if not rv:
-            return None
-
-        if command_name == 'left_delete':
-            # stop backspace on ST3 w/o breaking brackets
-            if not rv.allow_deletion():
-                return 'repl_pass', {}
-
-        if command_name == 'delete_word' and not args.get('forward'):
-            # stop ctrl+backspace on ST3 w/o breaking brackets
-            if not rv.allow_deletion():
-                return 'repl_pass', {}
-
-        return None
-
-class SubprocessReplSendSignal(sublime_plugin.TextCommand):
-    def run(self, edit, signal=None):
-        rv = manager.repl_view(self.view)
-        subrepl = rv.repl
-        signals = subrepl.available_signals()
-        sorted_names = sorted(signals.keys())
-        if signal in signals:
-            #signal given by name
-            self.safe_send_signal(subrepl, signals[signal])
-            return
-        if signal in list(signals.values()):
-            #signal given by code (correct one!)
-            self.safe_send_signal(subrepl, signal)
-            return
-
-        # no or incorrect signal given
-        def signal_selected(num):
-            if num == -1:
-                return
-            signame = sorted_names[num]
-            sigcode = signals[signame]
-            self.safe_send_signal(subrepl, sigcode)
-        self.view.window().show_quick_panel(sorted_names, signal_selected)
-
-    def safe_send_signal(self, subrepl, sigcode):
-        try:
-            subrepl.send_signal(sigcode)
-        except Exception as e:
-            sublime.error_message(str(e))
-
-    def is_visible(self):
-        rv = manager.repl_view(self.view)
-        return bool(rv) and hasattr(rv.repl, "send_signal")
-
-    def is_enabled(self):
-        return self.is_visible()
-
-    def description(self):
-        return "Send SIGNAL"

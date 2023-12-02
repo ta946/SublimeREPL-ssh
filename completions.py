@@ -3,14 +3,14 @@ from __future__ import absolute_import, unicode_literals, print_function, divisi
 import sublime
 import sublime_plugin
 
-    
+
 
 class SublimeREPLCompletions(sublime_plugin.EventListener):
     def on_query_completions(self, view, prefix, locations):
         try:
-            from .sublimerepl import manager
+            from .repl_manager_init import manager
         except ValueError:
-            from sublimerepl import manager
+            from repl_manager_init import manager
             
         if not view.settings().get("repl"):
             return True

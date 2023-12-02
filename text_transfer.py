@@ -8,9 +8,11 @@ import tempfile
 import binascii
 
 try:
-    from .sublimerepl import manager, SETTINGS_FILE
+    from .repl_manager_init import manager
+    from .sublimerepl import SETTINGS_FILE
 except (ImportError, ValueError):
-    from sublimerepl import manager, SETTINGS_FILE
+    from repl_manager_init import manager
+    from sublimerepl import SETTINGS_FILE
 
 
 def default_sender(repl, text, view=None, repl_view=None):

@@ -1,6 +1,7 @@
 from __future__ import absolute_import, unicode_literals, print_function, division
 import sys
 
+SETTINGS_FILE = 'SublimeREPL-ssh.sublime-settings'
 CAN_USE_PARAMIKO = False
 
 if sys.platform.startswith('win'):
@@ -33,5 +34,3 @@ if sys.platform.startswith('win'):
             CAN_USE_PARAMIKO = True
         except (ModuleNotFoundError,ImportError):
             pass
-
-    from .repls import *

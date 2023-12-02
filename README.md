@@ -13,7 +13,17 @@ This is not a terminal emulator, it just pushes the text you type through a subp
 * Any interactive terminal actions will not work. eg:
     * password entry
     * `ctrl+r` reverse search
-    * `vi` for interactive file editing
+    * `vim` for interactive file editing
+
+#### if using windows and paramkio dependancies work as expected
+
+* `paramiko_intercept_vi` will intercept you typing `vi ./folder/file_to_edit.txt` and download the file, to be edited locally, then upload on save.
+
+* For subprocess & ssh repls, ansi codes are stripped from the output and ignored. `emulate_ansi_csi` will enable interpretting ansi control sequences like
+carriage return, line clear and cursor moving (limited support!)
+
+* `filter_ascii_color_codes` set to `false` will enable displaying terminal color codes (limited support!)
+
 
 
 ### Getting started
@@ -36,7 +46,7 @@ This is not a terminal emulator, it just pushes the text you type through a subp
         "external_id": "shell",
         "suppress_echo": true,
         "syntax": "Packages/SublimeREPL-ssh/config/Io/Io.tmLanguage",
-        "type": "ssh"
+        "type": "ssh_paramiko"
     },
     { "keys": ["shift+ctrl+c"], "command": "subprocess_repl_send_signal", "args": {"signal": "SIGTERM"},
         "context": [{ "key": "setting.repl", "operator": "equal", "operand": true }]

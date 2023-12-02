@@ -11,7 +11,7 @@ import shlex
 from functools import partial
 from contextlib import closing
 
-SETTINGS_FILE = "SublimeREPL-ssh.sublime-settings"
+from . import SETTINGS_FILE
 
 
 class ClojureAutoLeinConnectRepl(sublime_plugin.WindowCommand):

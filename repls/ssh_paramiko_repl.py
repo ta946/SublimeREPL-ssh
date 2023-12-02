@@ -2,7 +2,6 @@ import sublime
 import sublime_plugin
 
 import os
-import re
 from queue import Queue, Empty
 from time import sleep
 
@@ -10,7 +9,8 @@ import signal
 import paramiko
 
 from .repl import Repl
-from ..sublimerepl import SETTINGS_FILE
+from ..sublimerepl import SETTINGS_FILE, ANSI_ESCAPE_8BIT_REGEX_BYTES
+from .subprocess_repl import SubprocessRepl
 
 
 SFTP_DIRECTORY = os.path.join(sublime.packages_path(), 'SublimeREPL-ssh/repls/sftp').replace('\\', '/')
@@ -118,58 +118,35 @@ class ViInterceptor:
             self.dest_path = path
             view = sublime.active_window().open_file(out_path)
             view.settings().set('SublimeREPL-ssh-sftp', True)
+            view.settings().set('view_repl_id', self._repl.id)
         return True
 
-vi_interceptor = ViInterceptor()
 
-
-class SublimeReplsshViewEventListener(sublime_plugin.ViewEventListener):
-    @classmethod
-    def is_applicable(cls, settings):
-        return settings.get('SublimeREPL-ssh-sftp')
-
-    # def on_post_save(self):
-    def on_post_save_async(self):
-        global vi_interceptor
-        if vi_interceptor.dest_path is None or vi_interceptor.src_path is None:
-            return
-        self.view.set_status('SublimeREPL-ssh', f'uploading {vi_interceptor.dest_path}...')
-        vi_interceptor.put_file(vi_interceptor.src_path, vi_interceptor.dest_path)
-        self.view.set_status('SublimeREPL-ssh', f'uploaded {vi_interceptor.dest_path}')
-
-    def on_close(self):
-        global vi_interceptor
-        self.view.erase_status('SublimeREPL-ssh')
-        vi_interceptor.src_path = None
-        vi_interceptor.dest_path = None
-        path = self.view.file_name()
-        if os.path.exists(path):
-            os.remove(path)
-
-
-class SshParamikoRepl(Repl):
+class SshParamikoRepl(SubprocessRepl):
     TYPE = "ssh_paramiko"
 
     def __init__(self, encoding, user, ip, key, env=None, vi_interceptor_handler=None, **kwds):
-        super().__init__(encoding, **kwds)
+        Repl.__init__(self, encoding, **kwds)
         self._user = user
         self._ip = ip
         self._key = key
         self._env = env
-        self._vi_interceptor_handler = vi_interceptor_handler or vi_interceptor
+        self._vi_interceptor_handler = vi_interceptor_handler or ViInterceptor()
         self._client = None
         self._transport = None
         self._channel = None
         self._alive = False
         self._killed = False
-        self._read_buffer = 4096
 
-        self._ansi_escape_8bit = re.compile(br'(?:\x1B[@-Z\\-_]|[\x80-\x9A\x9C-\x9F]|(?:\x1B\[|\x9B)[0-?]*[ -/]*[@-~])')
+        self._ansi_escape_8bit = ANSI_ESCAPE_8BIT_REGEX_BYTES
 
         settings = sublime.load_settings(SETTINGS_FILE)
         if settings.get("paramiko_intercept_vi"):
             self._vi_interceptor_handler.attach(self)
         self._connect()
+
+    def autocomplete_available(self):
+        return False
 
     def _check_alive(self):
         try:
@@ -206,40 +183,15 @@ class SshParamikoRepl(Repl):
         # self._alive = self._check_alive()
         return self._alive
 
-    def _recv(self):
+    def _read(self):
         _bytes = self._channel.recv(self._read_buffer)
-        if not _bytes:
-            return False, None
-        if len(_bytes) == self._read_buffer:
-            sleep(0.001)
-        _bytes = _bytes.replace(b'\r',b'')
-        _bytes = self._ansi_escape_8bit.sub(b'', _bytes)
-        return True, _bytes
-
-    def read_bytes(self):
-        while True:
-            ret, _bytes = self._recv()
-            if not ret:
-                return
-            elif _bytes:
-                return _bytes
+        return _bytes
 
     def write_bytes(self, _bytes):
         try:
             self._channel.sendall(_bytes)
         except paramiko.SSHException:
             self._alive = False
-
-    def available_signals(self):
-        signals = {}
-        for k, v in list(signal.__dict__.items()):
-            if not k.startswith("SIG") and k not in ['CTRL_C_EVENT','CTRL_BREAK_EVENT']:
-                continue
-            signals[k] = v
-        return signals
-
-    def send_signal(self, sig):
-        self.write_bytes(b'\x03')
 
     def kill(self):
         self._killed = True
@@ -256,3 +208,7 @@ class SshParamikoRepl(Repl):
             self._client.close()
         except:
             pass
+
+    def send_signal(self, sig):
+        self.write_bytes(b'\x03')
+        self._rv.clear_queue()

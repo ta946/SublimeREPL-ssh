@@ -101,6 +101,12 @@
     // "custom_python_shells": {"django": "my_django_project/manage.py shell"}
     "custom_python_shells": {},
 
+
+    // For subprocess & ssh repls, ansi codes are stripped from the output and ignored.
+    // This setting will enable interpretting ansi control sequences like
+    // carriage return, line clear and cursor moving (limited support!)
+    "emulate_ansi_csi": false,
+
     // If using windows and set to true, repl will use paramiko for ssh
     // if dependancies are able to be set up correctly.
     // Else subprocess repl will be used.
