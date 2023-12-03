@@ -7,14 +7,34 @@ import json
 import sublime
 import sublime_plugin
 
+from .ansi.ansi_color_utils import ANSI_COLOR_DIR
+
 SUBLIMEREPL_DIR = None
 SUBLIMEREPL_USER_DIR = None
+
+def _cleanup_ansi():
+    repl_ids = []
+    for window in sublime.windows():
+        views = window.views()
+        for view in views:
+            repl_id = view.settings().get('repl_id')
+            if not repl_id:
+                continue
+            repl_ids.append(repl_id)
+    color_dir = os.path.join(sublime.packages_path(), ANSI_COLOR_DIR).replace('\\', '/')
+    files = [f for f in os.listdir(color_dir)]
+    for file_name in files:
+        filetitle = os.path.splitext(file_name)[0]
+        if filetitle not in repl_ids:
+            file_path = os.path.join(color_dir, file_name)
+            os.remove(file_path)
 
 def plugin_loaded():
     global SUBLIMEREPL_DIR
     global SUBLIMEREPL_USER_DIR
     SUBLIMEREPL_DIR = "Packages/SublimeREPL-ssh"
     SUBLIMEREPL_USER_DIR = os.path.join(sublime.packages_path(), "User", "SublimeREPL-ssh")
+    _cleanup_ansi()
 
 PY2 = False
 if sys.version_info[0] == 2:

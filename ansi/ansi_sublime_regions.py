@@ -1,4 +1,5 @@
 import sublime
+
 import json
 
 
@@ -21,7 +22,6 @@ class AnsiSublimeRegions:
         self.rv._view.add_regions(
             scope, sum_regions, scope, "", sublime.DRAW_NO_OUTLINE | sublime.PERSISTENT
         )
-        pass
 
     def update_color_scheme(self):
         if not len(self._scopes_to_add):
@@ -48,7 +48,3 @@ class AnsiSublimeRegions:
         with open(self.rv._cs_file, 'w') as f:
             json.dump(color_scheme, f)
         self.rv._view.settings().set('color_scheme', self.rv._view.settings().get('color_scheme'))
-
-"""
-handle overwrite regions
-"""

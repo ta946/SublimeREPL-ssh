@@ -5,6 +5,7 @@ import json
 import re
 import types
 
+ANSI_COLOR_DIR = 'User/SublimeREPL-ssh'
 comment_regex = re.compile(r'\/\/.*$\r?\n?', re.MULTILINE)
 comma_regex = re.compile(r',(\s*[\]|}])', re.MULTILINE)
 
@@ -29,25 +30,9 @@ def _get_color_scheme_rules(color_schema_text):
 def _set_color_scheme(self):
     self._view.settings().set("color_scheme", f"Packages/{self._cs_file_relative}")
 
-def _cleanup_ansi_color(self, *args):
-    try:
-        color_scheme = self._view.settings().get("color_scheme")
-        session_path = os.path.join(os.getenv('APPDATA'), 'Sublime Text', 'Local', 'Auto Save Session.sublime_session')
-        with open(session_path, 'r') as f:
-            text = f.read()
-        text.replace(f'"color_scheme": {color_scheme},', '')
-        with open(session_path, 'w') as f:
-            f.write(text)
-    except Exception as e:
-        print(e)
-    self._view.settings().erase("color_scheme")
-    if os.path.exists(self._cs_file):
-        os.remove(self._cs_file)
-
 def init_ansi_color(self):
     self._set_color_scheme = types.MethodType(_set_color_scheme, self)
-    self._cleanup_ansi_color = types.MethodType(_cleanup_ansi_color, self)
-    self._cs_file_relative = f"User/SublimeREPL-ssh/{self.repl.id}.sublime-color-scheme"
+    self._cs_file_relative = f"{ANSI_COLOR_DIR}/{self.repl.id}.sublime-color-scheme"
     self._cs_file = os.path.join(sublime.packages_path(), self._cs_file_relative)
     rules = []
     try:
@@ -70,4 +55,3 @@ def init_ansi_color(self):
     with open(self._cs_file,'w') as f:
         json.dump(color_scheme, f)
     sublime.set_timeout(self._set_color_scheme, 500)
-    self.call_on_close.append(self._cleanup_ansi_color)

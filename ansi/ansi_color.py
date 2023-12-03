@@ -43,11 +43,11 @@ class AnsiColor:
     def __init__(self):
         self._ansi_color_unsupported_regex_str = r'\x1b\[(0;)?[25689]m'
         self._ansi_color_regex_str = r'(?:\x1b\[([0-9;]*)m)+\x0f?'
-        self._ansi_shift_regex_str = r'\x1b\(B?'
+        self._ansi_charset_regex_str = r'\x1b\[(|)]\w?'
         self._ansi_null_regex_str = r'\x00'
         self._ansi_color_regex = re.compile(self._ansi_color_regex_str, flags=re.IGNORECASE)
         self._ansi_color_unsupported_regex = re.compile(self._ansi_color_unsupported_regex_str, flags=re.IGNORECASE)
-        self._ansi_shift_regex = re.compile(self._ansi_shift_regex_str, flags=re.IGNORECASE)
+        self._ansi_charset_regex = re.compile(self._ansi_charset_regex_str, flags=re.IGNORECASE)
         self._ansi_null_regex = re.compile(self._ansi_null_regex_str, flags=re.IGNORECASE)
         self._style = self._default_style()
         self._style_changed = False
@@ -177,7 +177,7 @@ class AnsiColor:
         # print(text)
         # print(text.encode())
 
-        text = self._ansi_shift_regex.sub('', text)
+        text = self._ansi_charset_regex.sub('', text)
         text = self._ansi_null_regex.sub('', text)
 
         if not self._style_changed and not self._ansi_color_regex.search(text):

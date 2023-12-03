@@ -1,9 +1,12 @@
-import sublime
 import re
 
-from ..sublimerepl import ANSI_ESCAPE_8BIT_REGEX, ANSI_ESCAPE_ALLOWCOLOR_REGEX
-from .ansi_color import AnsiColor
-from .ansi_sublime_regions import AnsiSublimeRegions
+try:
+    from .ansi_regex import ANSI_ESCAPE_8BIT_REGEX, ANSI_ESCAPE_ALLOWCOLOR_REGEX
+    from .ansi_color import AnsiColor
+    from .ansi_sublime_regions import AnsiSublimeRegions
+except ImportError:
+    from ansi_regex import ANSI_ESCAPE_8BIT_REGEX, ANSI_ESCAPE_ALLOWCOLOR_REGEX
+    from ansi_color import AnsiColor
 
 
 class AnsiControl:
@@ -29,11 +32,8 @@ class AnsiControl:
         self._is_ansi_allow_color = bool(is_ansi_allow_color)
         self._ansi_escape_regex = self._ansi_escape_allowcolor_regex if self._is_ansi_allow_color else self._ansi_escape_8bit_regex
         self._ansi_color = AnsiColor()
-        self._ansi_sublime_regions = AnsiSublimeRegions(self.rv)
-
-    def _get_view_text(self):
-        view_text = self.rv._view.substr(sublime.Region(0, self.rv._view.size()))
-        return view_text
+        if is_ansi_allow_color:
+            self._ansi_sublime_regions = AnsiSublimeRegions(self.rv)
 
     def _get_text_end(self):
         pos = self.rv._output_end - self.rv._prompt_size
@@ -51,7 +51,7 @@ class AnsiControl:
 
     @staticmethod
     def _check_cursor_move(m):
-        ret = m[2] in ('A', 'B', 'C', 'H')
+        ret = m[2] in ('A', 'B', 'C', 'D', 'H')
         return ret
 
     @staticmethod
@@ -117,7 +117,7 @@ class AnsiControl:
             if not ret:
                 self._cursor_pos = pos
                 self.insert('\n')
-                pos = self._cursor_pos
+                # pos = self._cursor_pos
                 continue
             self._cursor_pos = pos + 1
         self._insert_space_to_offset(offset)
@@ -132,6 +132,17 @@ class AnsiControl:
             self._insert_overwrite(text)
         else:
             self._cursor_pos = new_pos
+
+    def _move_cursor_backward(self, view_text, num_move):
+        """
+        CORRECT BEHAVIOUR IS WRAP AROUND
+        self._cursor_pos -= num_move
+        BUT DUE TO HTOP GOING BACK TOO MANY CHARS, LIMIT TO LINE START
+        """
+        ret, pos = self._find_line_start(view_text)
+        new_pos = self._cursor_pos-num_move
+        new_pos = max(pos, new_pos)
+        self._cursor_pos = new_pos
 
     def _move_cursor_coordinate(self, view_text, code):
         code_split = code.split(';')
@@ -162,17 +173,17 @@ class AnsiControl:
 
     def _process_newline(self):
         self._process_carriage_return()
-        self._move_line_down(self._get_view_text(), 1)
+        self._move_line_down(self.rv.get_view_text(), 1)
 
     def _process_carriage_return(self):
-        view_text = self._get_view_text()
+        view_text = self.rv.get_view_text()
         text = view_text[:self._cursor_pos + 1]
         ret, pos = self._find_line_start(text)
         self._cursor_pos = pos
         return ret
 
     def _process_cursor_move(self, m):
-        view_text = self._get_view_text()
+        view_text = self.rv.get_view_text()
         if m[2] == 'H':  # COORDINATE
             self._move_cursor_coordinate(view_text, m[1])
         else:
@@ -183,9 +194,11 @@ class AnsiControl:
                 self._move_line_down(view_text, num_move)
             elif m[2] == 'C':  # FORWARD
                 self._move_cursor_forward(view_text, num_move)
+            elif m[2] == 'D':  # BACKWARD
+                self._move_cursor_backward(view_text, num_move)
 
     def _process_line_erase(self, m):
-        view_text = self._get_view_text()
+        view_text = self.rv.get_view_text()
         if m[1] == '1':  # Start of line through cursor
             _, start = self._find_line_start(view_text)
             end = self._cursor_pos
@@ -244,7 +257,7 @@ class AnsiControl:
             self._ansi_sublime_regions.insert_append(pos, self._cursor_pos, style)
 
     def _insert_overwrite(self, text):
-        view_text = self._get_view_text()
+        view_text = self.rv.get_view_text()
         ret, pos = self._find_line_end(view_text)
         line_length = pos - self._cursor_pos
         overwrite_length = min(line_length,len(text))
@@ -253,7 +266,7 @@ class AnsiControl:
         self._insert_append(text, self._cursor_pos)
 
     def _insert_space_to_offset(self, offset):
-        view_text = self._get_view_text()
+        view_text = self.rv.get_view_text()
         ret, pos = self._find_line_end(view_text)
         if self._cursor_pos + offset > pos:
             n_spaces = self._cursor_pos + offset - pos
@@ -281,16 +294,15 @@ class AnsiControl:
 
 
     def run(self, text):
-        # self._insert_append(text, self._cursor_pos)
-        # return
-        # print('text')
+        # print('ansicontrol text')
         # print(text)
         # print(text.encode())
+
+        text = self._clear_regex.sub('\x1b[J', text)
+        text = self._endash_regex.sub('-', text)
         while True:
             if not len(text):
                 break
-            text = self._clear_regex.sub('\x1b[J', text)
-            text = self._endash_regex.sub('-', text)
             regex = self._cursor_w_newline_regex if self._check_cursor_moved() else self._cursor_regex
             m = re.search(regex, text)
             if m is None:
@@ -308,5 +320,46 @@ https://vt100.net/docs/vt510-rm/chapter4.html
 \x1b[?2004l  # bracketed paste mode (h: on l: off)
 ??? newline without indent matching previous line??? cant remember
 add newline to prompt if no newline before text before prompt
-long logs are slow now
 """
+
+def main():
+    class MockView:
+        def __init__(self, text=""):
+            self._text = text
+        def size(self):
+            size = len(self._text)
+            return size
+        def _erase_text(self, args):
+            start = args["start"]
+            end = args["end"]
+            self._text = self._text[:start]+self._text[end+1:]
+        def _insert_text(self, args):
+            pos = args["pos"]
+            text = args["text"]
+            self._text = self._text[:pos]+text+self._text[pos+1:]
+        def run_command(self, command, args):
+            if command == 'repl_erase_text':
+                self._erase_text(args)
+            elif command == 'repl_insert_text':
+                self._insert_text(args)
+            else:
+                raise NotImplementedError(f'{command} {args}')
+    class MockReplView:
+        def __init__(self, view):
+            self._view = view
+            self._prompt_size = 0
+            self._output_end = self._view.size()
+        def get_view_text(self):
+            text = self._view._text
+            return text
+    view_text = ''
+    view = MockView(view_text)
+    rv = MockReplView(view)
+    handler = AnsiControl(rv=rv, is_ansi_allow_color=False)
+    handler._cursor_pos = view.size()
+    text = '\x1b[m\x0f3\x1b[0;1m\x0f[\x1b[0m\x0f                          0.0%\x1b[0;1m\x0f]\x1b[1B'
+    handler.run(text)
+    print(rv.get_view_text())
+    return
+if __name__ == '__main__':
+    main()

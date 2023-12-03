@@ -3,13 +3,12 @@ import sublime_plugin
 
 import os
 from queue import Queue, Empty
-from time import sleep
 
-import signal
 import paramiko
 
 from .repl import Repl
-from ..sublimerepl import SETTINGS_FILE, ANSI_ESCAPE_8BIT_REGEX_BYTES
+from ..sublimerepl import SETTINGS_FILE
+from ..ansi.ansi_regex import ANSI_ESCAPE_8BIT_REGEX_BYTES
 from .subprocess_repl import SubprocessRepl
 
 
@@ -210,5 +209,5 @@ class SshParamikoRepl(SubprocessRepl):
             pass
 
     def send_signal(self, sig):
-        self.write_bytes(b'\x03')
         self._rv.clear_queue()
+        self.write_bytes(b'\x03')

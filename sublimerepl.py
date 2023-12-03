@@ -4,7 +4,6 @@
 # See LICENSE.txt for details.
 from __future__ import absolute_import, unicode_literals, print_function, division
 
-import re
 import os
 import os.path
 import threading
@@ -13,24 +12,16 @@ from datetime import datetime
 import sublime
 import sublime_plugin
 
-# ANSI_ESCAPE_8BIT_REGEX_STR = r'(?:\x1B[0-Z\\-_]|[\x80-\x9A\x9C-\x9F]|(?:\x1B\[|\x9B)[0-?]*[ -/]*[@-~])'
-ANSI_ESCAPE_8BIT_REGEX_STR = r'(?:\x1B[0-Z\\-_]|[\x80-\x9A\x9C-\x9F]|(?:\x1b\[\??\d*[;|\d*]*[a-zA-Z]))'
-ANSI_ESCAPE_8BIT_REGEX = re.compile(ANSI_ESCAPE_8BIT_REGEX_STR, re.IGNORECASE)
-ANSI_ESCAPE_8BIT_REGEX_BYTES = re.compile(ANSI_ESCAPE_8BIT_REGEX_STR.encode(), re.IGNORECASE)
-ANSI_ESCAPE_ALLOWCOLOR_REGEX_STR = r'(?:\x1B[0-Z\\-_]|[\x80-\x9A\x9C-\x9F]|(?:\x1b\[\??\d*[;|\d*]*((?!m)[a-zA-Z])))'
-ANSI_ESCAPE_ALLOWCOLOR_REGEX = re.compile(ANSI_ESCAPE_ALLOWCOLOR_REGEX_STR, re.IGNORECASE)
-ANSI_ESCAPE_ALLOWCOLOR_REGEX_BYTES = re.compile(ANSI_ESCAPE_ALLOWCOLOR_REGEX_STR.encode(), re.IGNORECASE)
-ANSI_COLOR_REGEX_STR = r'(\033\[\d*(?:;\d*)?\w|.\x08|\x01\x02)'
-ANSI_COLOR_REGEX = re.compile(ANSI_COLOR_REGEX_STR)
-
 try:
     import queue
     from .ansi import ansi_control, ansi_color_utils
+    from .ansi.ansi_regex import ANSI_ESCAPE_8BIT_REGEX, ANSI_COLOR_REGEX
     from .repllibs import PyDbLite
 except ImportError:
-    from ansi import ansi_control, ansi_color_utils
-    from repllibs import PyDbLite
     import Queue as queue
+    from ansi import ansi_control, ansi_color_utils
+    from ansi.ansi_regex import ANSI_ESCAPE_8BIT_REGEX, ANSI_COLOR_REGEX
+    from repllibs import PyDbLite
 from . import SETTINGS_FILE
 
 # import importlib; importlib.reload(repls.subprocess_repl);
@@ -358,6 +349,10 @@ class ReplView(object):
             self._view.insert(edit, self._view.size(), text)
         else:
             self._view.run_command("repl_insert_text", {"pos": self._view.size(), "text": text})
+
+    def get_view_text(self):
+        text = self._view.substr(sublime.Region(0, self._view.size()))
+        return text
 
     def clear_queue(self):
         with self._repl_reader.queue.mutex:

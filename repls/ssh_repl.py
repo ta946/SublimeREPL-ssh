@@ -1,8 +1,7 @@
 import re
-from time import sleep
 
 from .subprocess_repl import SubprocessRepl
-from ..sublimerepl import ANSI_ESCAPE_8BIT_REGEX_BYTES
+from ..ansi.ansi_regex import ANSI_ESCAPE_8BIT_REGEX_BYTES
 
 
 class SshRepl(SubprocessRepl):

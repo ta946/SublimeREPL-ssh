@@ -1,0 +1,11 @@
+import re
+
+# ANSI_ESCAPE_8BIT_REGEX_STR = r'(?:\x1B[0-Z\\-_]|[\x80-\x9A\x9C-\x9F]|(?:\x1B\[|\x9B)[0-?]*[ -/]*[@-~])'
+ANSI_ESCAPE_8BIT_REGEX_STR = r'(?:\x1B[0-Z\\-_]|[\x80-\x9A\x9C-\x9F]|(?:\x1b\[\??\d*[;|\d*]*[a-zA-Z]))'
+ANSI_ESCAPE_8BIT_REGEX = re.compile(ANSI_ESCAPE_8BIT_REGEX_STR, re.IGNORECASE)
+ANSI_ESCAPE_8BIT_REGEX_BYTES = re.compile(ANSI_ESCAPE_8BIT_REGEX_STR.encode(), re.IGNORECASE)
+ANSI_ESCAPE_ALLOWCOLOR_REGEX_STR = r'(?:\x1B[0-Z\\-_]|[\x80-\x9A\x9C-\x9F]|(?:\x1b\[\??\d*[;|\d*]*((?!m)[a-zA-Z])))'
+ANSI_ESCAPE_ALLOWCOLOR_REGEX = re.compile(ANSI_ESCAPE_ALLOWCOLOR_REGEX_STR, re.IGNORECASE)
+ANSI_ESCAPE_ALLOWCOLOR_REGEX_BYTES = re.compile(ANSI_ESCAPE_ALLOWCOLOR_REGEX_STR.encode(), re.IGNORECASE)
+ANSI_COLOR_REGEX_STR = r'(\033\[\d*(?:;\d*)?\w|.\x08|\x01\x02)'
+ANSI_COLOR_REGEX = re.compile(ANSI_COLOR_REGEX_STR)
