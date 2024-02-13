@@ -58,7 +58,7 @@ class ReplManager(object):
             kwds['cmd'] = ["ssh", "-tt", "-i", key, f"{user}@{ip}"]
         return type, kwds
 
-    def open(self, window, encoding, type, syntax=None, view_id=None, title=None, **kwds):
+    def open(self, window, encoding, type, syntax=None, view_id=None, title=None, show_error=True, **kwds):
         type, kwds = self._check_paramiko(type, kwds)
         repl_restart_args = {
             'encoding': encoding,
@@ -86,8 +86,10 @@ class ReplManager(object):
             view.set_name(title)
             return rv
         except Exception as e:
-            traceback.print_exc()
-            sublime.error_message(repr(e))
+            if show_error:
+                traceback.print_exc()
+                sublime.error_message(repr(e))
+            return
 
     def restart(self, view, edit):
         repl_restart_args = view.settings().get("repl_restart_args")
