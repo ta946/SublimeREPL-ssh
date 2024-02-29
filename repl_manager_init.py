@@ -127,6 +127,13 @@ class ReplViewNextCommand(sublime_plugin.TextCommand):
             rv.next_command(edit)
 
 
+class ReplTabCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        rv = manager.repl_view(self.view)
+        if rv:
+            rv.on_tab()
+
+
 class ReplKillCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         rv = manager.repl_view(self.view)

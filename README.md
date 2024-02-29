@@ -24,6 +24,8 @@ carriage return, line clear and cursor moving (limited support!)
 
 * `filter_ascii_color_codes` set to `false` will enable displaying terminal color codes (limited support!)
 
+* press `shift+tab` to autocomplete
+
 
 
 ### Getting started

@@ -1,3 +1,4 @@
+import time
 import sublime
 import sublime_plugin
 
@@ -34,13 +35,19 @@ class ViInterceptor:
                 return _bytes
 
     def _write_bytes(self, _bytes):
-        ret = self.process_vi(_bytes)
+        ret = self.process(_bytes)
         if ret:
             return
-        try:
-            self._repl._channel.sendall(_bytes)
-        except paramiko.SSHException:
-            self._repl._alive = False
+        self._repl._write_bytes(_bytes)
+
+    def _recv_intercepted(self):
+        _bytes = b''
+        for _ in range(5):
+            try:
+                _bytes += self._recv_Q.get(timeout=0.04)
+            except Empty:
+                pass
+        return _bytes
 
     def _get_cwd(self):
         cwd = ''
@@ -86,21 +93,7 @@ class ViInterceptor:
             return
         return out_path
 
-    def attach(self, repl):
-        self._repl = repl
-        self._repl.read_bytes = self._read_bytes
-        self._repl.write_bytes = self._write_bytes
-        self._recv_Q = Queue(maxsize=1)
-        self._recv_return_Q = Queue(maxsize=1)
-
-    def put_file(self, src_path, dest_path):
-        try:
-            with self._repl._client.open_sftp() as sftp:
-                sftp.put(src_path, dest_path)
-        except Exception as e:
-            print(e)
-
-    def process_vi(self, _bytes):
+    def _process_vi(self, _bytes):
         if not _bytes.startswith(b'vi '):
             return False
         path = _bytes[3:].strip().decode()
@@ -119,6 +112,80 @@ class ViInterceptor:
             view.settings().set('SublimeREPL-ssh-sftp', True)
             view.settings().set('view_repl_id', self._repl.id)
         return True
+
+    @staticmethod
+    def _common_prefix(words):
+        if not words:
+            return b""
+        
+        min_length = min(len(word) for word in words)
+        prefix = b""
+        for i in range(min_length):
+            letter = words[0][i:i+1]
+            if all(word.startswith(prefix + letter) for word in words):
+                prefix += letter
+            else:
+                break
+        return prefix
+
+    def _process_tab(self, text):
+        text_rsplit = text.rsplit(maxsplit=1)
+        if not len(text_rsplit):
+            return False
+        word = text_rsplit[-1]
+        if len(text_rsplit) == 1:
+            prefix = ""
+        else:
+            prefix = f'{text_rsplit[0]} '
+        try:
+            self._intercept_recv = True
+            msg = f'compgen -f {word}\n'.encode()
+            self._repl._channel.sendall(msg)
+            _bytes = self._recv_intercepted()
+            _bytes_split = _bytes.split(b'\n')
+            if len(_bytes_split) > 2:
+                results = _bytes_split[1:-1]
+                results[0] = self._repl._ansi_escape_8bit.sub(b'', results[0]).strip()
+                if len(results) == 1:
+                    result = results[0]
+                else:
+                    result = self._common_prefix(results)
+                txt = f'{prefix}{result.decode()}'
+                view = sublime.active_window().active_view()
+                view.run_command('repl_escape')
+                view.run_command("repl_insert_text", {"pos": view.size(), "text": txt})
+        except Exception as e:
+            print('error in ViInterceptor')
+            print(e)
+        finally:
+            self._intercept_recv = False
+            try:
+                self._recv_Q.get_nowait()
+            except Empty:
+                pass
+            with self._recv_Q.mutex:
+                self._recv_Q.queue.clear()
+        return True
+
+    def attach(self, repl):
+        self._repl = repl
+        self._repl.read_bytes = self._read_bytes
+        self._repl.write_bytes = self._write_bytes
+        self._recv_Q = Queue(maxsize=1)
+        self._recv_return_Q = Queue(maxsize=1)
+
+    def put_file(self, src_path, dest_path):
+        try:
+            with self._repl._client.open_sftp() as sftp:
+                sftp.put(src_path, dest_path)
+        except Exception as e:
+            print(e)
+
+    def process(self, _bytes):
+        ret = self._process_vi(_bytes)
+        if ret:
+            return True
+        return False
 
 
 class SshParamikoRepl(SubprocessRepl):
@@ -186,11 +253,14 @@ class SshParamikoRepl(SubprocessRepl):
         _bytes = self._channel.recv(self._read_buffer)
         return _bytes
 
-    def write_bytes(self, _bytes):
+    def _write_bytes(self, _bytes):
         try:
             self._channel.sendall(_bytes)
         except paramiko.SSHException:
             self._alive = False
+
+    def write_bytes(self, _bytes):
+        self._write_bytes(_bytes)
 
     def kill(self):
         self._killed = True

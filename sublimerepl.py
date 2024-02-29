@@ -259,6 +259,11 @@ class ReplView(object):
             for i in range(abs(self.delta)):
                 self._window.run_command("move", {"by": "characters", "forward": False, "extend": True})
 
+    def on_tab(self):
+        if self.repl.TYPE != "ssh_paramiko":
+            return
+        self.repl._vi_interceptor_handler._process_tab(self.user_input)
+
     def on_selection_modified(self):
         self._view.set_read_only(self.delta > 0)
 
