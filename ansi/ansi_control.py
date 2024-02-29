@@ -34,6 +34,8 @@ class AnsiControl:
         self._ansi_color = AnsiColor()
         if is_ansi_allow_color:
             self._ansi_sublime_regions = AnsiSublimeRegions(self.rv)
+        self._debug = False
+        self._debug_file_handle = None
 
     def _get_text_end(self):
         pos = self.rv._output_end - self.rv._prompt_size
@@ -187,7 +189,7 @@ class AnsiControl:
         if m[2] == 'H':  # COORDINATE
             self._move_cursor_coordinate(view_text, m[1])
         else:
-            num_move = int(m[1])
+            num_move = int(m[1]) if len(m[1]) else 1
             if m[2] == 'A':  # UP
                 self._move_line_up(view_text, num_move)
             elif m[2] == 'B':  # DOWN
@@ -277,6 +279,8 @@ class AnsiControl:
 
     def _insert(self, text, style=None):
         text = self._ansi_escape_regex.sub('', text)
+        if self._debug and self._debug_file_handle:
+            self._debug_file_handle.write(text)
         is_cursor_moved = self._check_cursor_moved()
         if is_cursor_moved:
             self._insert_overwrite(text)
@@ -293,26 +297,39 @@ class AnsiControl:
             self._insert(text)
 
 
-    def run(self, text):
+    def run(self, text, debug=False):
         # print('ansicontrol text')
         # print(text)
         # print(text.encode())
+        self._debug = debug
+        if self._debug:
+            import datetime
+            self._debug_file_handle = open("debug.txt", "a")
+            self._debug_file_handle.write(f"\n-----input raw----- {datetime.datetime.now().isoformat()}\n")
+            self._debug_file_handle.write(text)
+            self._debug_file_handle.write("\n-----output-----\n")
 
-        text = self._clear_regex.sub('\x1b[J', text)
-        text = self._endash_regex.sub('-', text)
+        _text = text
+        _text = self._clear_regex.sub('\x1b[J', _text)
+        _text = self._endash_regex.sub('-', _text)
         while True:
-            if not len(text):
+            if not len(_text):
                 break
             regex = self._cursor_w_newline_regex if self._check_cursor_moved() else self._cursor_regex
-            m = re.search(regex, text)
+            m = re.search(regex, _text)
             if m is None:
                 break
-            text = self._process_prefix(text, m)
+            _text = self._process_prefix(_text, m)
             self._process_ansi(m)
-        if len(text):
-            self.insert(text)
+        if len(_text):
+            self.insert(_text)
         if self._is_ansi_allow_color:
             self._ansi_sublime_regions.update_color_scheme()
+
+        if self._debug_file_handle:
+            self._debug_file_handle.write("\n-----end-----\n")
+            self._debug_file_handle.close()
+            self._debug_file_handle = None
 
 """
 https://notes.burke.libbey.me/ansi-escape-codes/

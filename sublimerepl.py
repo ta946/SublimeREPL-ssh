@@ -187,6 +187,7 @@ class ReplView(object):
 
         self._filter_color_codes = settings.get("filter_ascii_color_codes")
         self._emulate_ansi_csi = settings.get("emulate_ansi_csi")
+        self._debug_ansi = settings.get("debug_ansi", False)
         if self._emulate_ansi_csi:
             self._ansi_controller = ansi_control.AnsiControl(self, is_ansi_allow_color=not self._filter_color_codes)
             if not self._filter_color_codes:
@@ -325,7 +326,12 @@ class ReplView(object):
     def write(self, unistr):
         """Writes output from Repl into this view."""
         if self._emulate_ansi_csi:
-            self._ansi_controller.run(unistr)
+            try:
+                self._ansi_controller.run(unistr, debug=self._debug_ansi)
+            except Exception as e:
+                print(e)
+                print(unistr)
+                sublime.error_message("Error in ansi controller!")
         else:
             # remove color codes
             if self._filter_color_codes:
