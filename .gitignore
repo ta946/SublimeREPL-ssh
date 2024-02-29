@@ -1,3 +1,4 @@
 *.pyc
 *.bak
 doc/_build
+ansi/debug.txt

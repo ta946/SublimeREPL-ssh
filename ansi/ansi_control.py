@@ -303,8 +303,10 @@ class AnsiControl:
         # print(text.encode())
         self._debug = debug
         if self._debug:
+            import os
             import datetime
-            self._debug_file_handle = open("debug.txt", "a")
+            debug_path = os.path.join(os.path.dirname(__file__), "debug.txt")
+            self._debug_file_handle = open(debug_path, "a")
             self._debug_file_handle.write(f"\n-----input raw----- {datetime.datetime.now().isoformat()}\n")
             self._debug_file_handle.write(text)
             self._debug_file_handle.write("\n-----output-----\n")
