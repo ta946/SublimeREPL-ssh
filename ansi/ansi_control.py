@@ -306,7 +306,7 @@ class AnsiControl:
             import os
             import datetime
             debug_path = os.path.join(os.path.dirname(__file__), "debug.txt")
-            self._debug_file_handle = open(debug_path, "a")
+            self._debug_file_handle = open(debug_path, "a", encoding='utf-8')
             self._debug_file_handle.write(f"\n-----input raw----- {datetime.datetime.now().isoformat()}\n")
             self._debug_file_handle.write(text)
             self._debug_file_handle.write("\n-----output-----\n")
