@@ -23,7 +23,7 @@ class SublimeReplsshViewEventListener(sublime_plugin.ViewEventListener):
         self.view.set_status('SublimeREPL-ssh', f'uploaded {vi_intrcpt_hndlr.dest_path}')
 
     def on_close(self):
-        rv = manager.repl_view(self.view)
+        rv = manager.repl_views.get(self.view.settings().get('view_repl_id'), None)
         if not rv:
             return
         vi_intrcpt_hndlr = rv.repl._vi_interceptor_handler
