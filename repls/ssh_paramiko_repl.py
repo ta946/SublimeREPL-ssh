@@ -283,5 +283,4 @@ class SshParamikoRepl(SubprocessRepl):
     def send_signal(self, sig):
         self._rv.clear_queue()
         code = b'\x04' if sig in ('EOT', b'\x04') else b'\x03'
-        print(sig, code)
         self.write_bytes(code)
