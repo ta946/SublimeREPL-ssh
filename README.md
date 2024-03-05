@@ -24,7 +24,7 @@ carriage return, line clear and cursor moving (limited support!)
 
 * `filter_ascii_color_codes` set to `false` will enable displaying terminal color codes (limited support!)
 
-* press `shift+tab` to autocomplete
+* press `shift+tab` or `shift+space` to autocomplete
 
 
 
@@ -50,8 +50,5 @@ carriage return, line clear and cursor moving (limited support!)
         "syntax": "Packages/SublimeREPL-ssh/config/Io/Io.tmLanguage",
         "type": "ssh_paramiko"
     },
-    { "keys": ["shift+ctrl+c"], "command": "subprocess_repl_send_signal", "args": {"signal": "SIGTERM"},
-        "context": [{ "key": "setting.repl", "operator": "equal", "operand": true }]
-    }
 }
 ```

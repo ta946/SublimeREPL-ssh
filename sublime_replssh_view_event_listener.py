@@ -15,7 +15,7 @@ class SublimeReplsshViewEventListener(sublime_plugin.ViewEventListener):
         rv = manager.repl_views.get(self.view.settings().get('view_repl_id'), None)
         if not rv:
             return
-        vi_intrcpt_hndlr = rv.repl._vi_interceptor_handler
+        vi_intrcpt_hndlr = rv.repl._interceptor_handler
         if vi_intrcpt_hndlr.dest_path is None or vi_intrcpt_hndlr.src_path is None:
             return
         self.view.set_status('SublimeREPL-ssh', f'uploading {vi_intrcpt_hndlr.dest_path}...')
@@ -26,7 +26,7 @@ class SublimeReplsshViewEventListener(sublime_plugin.ViewEventListener):
         rv = manager.repl_views.get(self.view.settings().get('view_repl_id'), None)
         if not rv:
             return
-        vi_intrcpt_hndlr = rv.repl._vi_interceptor_handler
+        vi_intrcpt_hndlr = rv.repl._interceptor_handler
         self.view.erase_status('SublimeREPL-ssh')
         vi_intrcpt_hndlr.src_path = None
         vi_intrcpt_hndlr.dest_path = None

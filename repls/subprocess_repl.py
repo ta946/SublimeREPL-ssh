@@ -276,6 +276,7 @@ class SubprocessRepl(Repl):
             if not k.startswith("SIG") and k not in ['CTRL_C_EVENT','CTRL_BREAK_EVENT']:
                 continue
             signals[k] = v
+        signals['EOT'] = b'\x04'
         return signals
 
     def send_signal(self, sig):

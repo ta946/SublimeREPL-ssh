@@ -10,8 +10,11 @@ except ImportError:
 
 
 class AnsiControl:
-    def __init__(self, rv, is_ansi_allow_color=False):
+    def __init__(self, rv, is_ansi_allow_color=False, terminal_height=24, limit_cursor_up=False):
         self.rv = rv
+        self._is_ansi_allow_color = bool(is_ansi_allow_color)
+        self._terminal_height = terminal_height
+        self._limit_cursor_up = limit_cursor_up
         self._cursor_pos = 0  # 1-indexed
         self._ansi_csi_regex_str = r'\x1b\[(\??\d*[;|\d*]*)((?!m)[a-zA-Z])'
         self._carriage_return_str = r'\r'  # \x0d
@@ -29,7 +32,6 @@ class AnsiControl:
         self._endash_regex = re.compile(self._endash_regex_str)
         self._ansi_escape_8bit_regex = ANSI_ESCAPE_8BIT_REGEX
         self._ansi_escape_allowcolor_regex = ANSI_ESCAPE_ALLOWCOLOR_REGEX
-        self._is_ansi_allow_color = bool(is_ansi_allow_color)
         self._ansi_escape_regex = self._ansi_escape_allowcolor_regex if self._is_ansi_allow_color else self._ansi_escape_8bit_regex
         self._ansi_color = AnsiColor()
         if is_ansi_allow_color:
@@ -40,36 +42,6 @@ class AnsiControl:
     def _get_text_end(self):
         pos = self.rv._output_end - self.rv._prompt_size
         return pos
-
-    @staticmethod
-    def _check_newline(m):
-        ret = m[0] == '\n'
-        return ret
-
-    @staticmethod
-    def _check_carriage_return(m):
-        ret = m[0] == '\r'
-        return ret
-
-    @staticmethod
-    def _check_cursor_move(m):
-        ret = m[2] in ('A', 'B', 'C', 'D', 'H')
-        return ret
-
-    @staticmethod
-    def _check_line_erase(m):
-        ret = m[1] in ('','0','1','2') and m[2] == 'K'
-        return ret
-
-    @staticmethod
-    def _check_display_erase(m):
-        ret = m[1] in ('','0','1','2','3') and m[2] == 'J'
-        return ret
-
-    @staticmethod
-    def _check_bracketed_paste(m):
-        ret = m[1] in ('?2004') and m[2] in ('h','l')
-        return ret
 
     def _find_line_start(self, view_text):
         """returns \n pos+1"""
@@ -99,6 +71,13 @@ class AnsiControl:
 
     def _move_line_up(self, view_text, num_move):
         offset = None
+        if self._limit_cursor_up:
+            text_end = self._get_text_end()
+            n_lines = view_text[self._cursor_pos:text_end+1].count('\n') + 1
+            max_move = self._terminal_height - n_lines
+            num_move = min(num_move, max_move)
+            if num_move < 1:
+                return
         for _ in range(num_move):
             ret, pos = self._find_line_start(view_text)
             if not ret:
@@ -173,15 +152,30 @@ class AnsiControl:
         remaining = text[end:]
         return remaining
 
+    @staticmethod
+    def _check_newline(m):
+        ret = m[0] == '\n'
+        return ret
+
     def _process_newline(self):
         self._process_carriage_return()
         self._move_line_down(self.rv.get_view_text(), 1)
+
+    @staticmethod
+    def _check_carriage_return(m):
+        ret = m[0] == '\r'
+        return ret
 
     def _process_carriage_return(self):
         view_text = self.rv.get_view_text()
         text = view_text[:self._cursor_pos + 1]
         ret, pos = self._find_line_start(text)
         self._cursor_pos = pos
+        return ret
+
+    @staticmethod
+    def _check_cursor_move(m):
+        ret = m[2] in ('A', 'B', 'C', 'D', 'H')
         return ret
 
     def _process_cursor_move(self, m):
@@ -199,6 +193,11 @@ class AnsiControl:
             elif m[2] == 'D':  # BACKWARD
                 self._move_cursor_backward(view_text, num_move)
 
+    @staticmethod
+    def _check_line_erase(m):
+        ret = m[1] in ('','0','1','2') and m[2] == 'K'
+        return ret
+
     def _process_line_erase(self, m):
         view_text = self.rv.get_view_text()
         if m[1] == '1':  # Start of line through cursor
@@ -212,6 +211,11 @@ class AnsiControl:
             _, end = self._find_line_end(view_text)
         self._erase(start, end)
 
+    @staticmethod
+    def _check_display_erase(m):
+        ret = m[1] in ('','0','1','2','3') and m[2] == 'J'
+        return ret
+
     def _process_display_erase(self, m):
         if m[1] == '1':  # Start of display through cursor
             start = 0
@@ -223,6 +227,11 @@ class AnsiControl:
             start = self._cursor_pos
             end = self.rv._view.size()
         self._erase(start, end)
+
+    @staticmethod
+    def _check_bracketed_paste(m):
+        ret = m[1] in ('?2004') and m[2] in ('h','l')
+        return ret
 
     def _process_bracketed_paste(self, m):
         if m[1] == 'h':  # Enable bracketed paste
@@ -351,11 +360,11 @@ def main():
         def _erase_text(self, args):
             start = args["start"]
             end = args["end"]
-            self._text = self._text[:start]+self._text[end+1:]
+            self._text = self._text[:start]+self._text[end:]
         def _insert_text(self, args):
             pos = args["pos"]
             text = args["text"]
-            self._text = self._text[:pos]+text+self._text[pos+1:]
+            self._text = self._text[:pos]+text+self._text[pos:]
         def run_command(self, command, args):
             if command == 'repl_erase_text':
                 self._erase_text(args)
@@ -374,7 +383,7 @@ def main():
     view_text = ''
     view = MockView(view_text)
     rv = MockReplView(view)
-    handler = AnsiControl(rv=rv, is_ansi_allow_color=False)
+    handler = AnsiControl(rv=rv, is_ansi_allow_color=False, limit_cursor_up=True)
     handler._cursor_pos = view.size()
     text = '\x1b[m\x0f3\x1b[0;1m\x0f[\x1b[0m\x0f                          0.0%\x1b[0;1m\x0f]\x1b[1B'
     handler.run(text)

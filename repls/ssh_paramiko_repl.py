@@ -8,7 +8,7 @@ from queue import Queue, Empty
 import paramiko
 
 from .repl import Repl
-from ..sublimerepl import SETTINGS_FILE
+from ..sublimerepl import SETTINGS_FILE, TERMINAL_HEIGHT
 from ..ansi.ansi_regex import ANSI_ESCAPE_8BIT_REGEX_BYTES
 from .subprocess_repl import SubprocessRepl
 
@@ -16,12 +16,15 @@ from .subprocess_repl import SubprocessRepl
 SFTP_DIRECTORY = os.path.join(sublime.packages_path(), 'SublimeREPL-ssh/repls/sftp').replace('\\', '/')
 
 
-class ViInterceptor:
+class Interceptor:
     def __init__(self, sftp_directory=SFTP_DIRECTORY):
         self._sftp_directory = sftp_directory
         self._intercept_recv = False
         self.src_path = None
         self.dest_path = None
+
+        settings = sublime.load_settings(SETTINGS_FILE)
+        self._is_intercept_vi = bool(settings.get("paramiko_intercept_vi"))
 
     def _read_bytes(self):
         while True:
@@ -44,7 +47,7 @@ class ViInterceptor:
         _bytes = b''
         for _ in range(5):
             try:
-                _bytes += self._recv_Q.get(timeout=0.04)
+                _bytes += self._recv_Q.get(timeout=0.01)
             except Empty:
                 pass
         return _bytes
@@ -155,7 +158,7 @@ class ViInterceptor:
                 view.run_command('repl_escape')
                 view.run_command("repl_insert_text", {"pos": view.size(), "text": txt})
         except Exception as e:
-            print('error in ViInterceptor')
+            print('error in Interceptor')
             print(e)
         finally:
             self._intercept_recv = False
@@ -182,22 +185,24 @@ class ViInterceptor:
             print(e)
 
     def process(self, _bytes):
-        ret = self._process_vi(_bytes)
-        if ret:
-            return True
+        if self._is_intercept_vi:
+            ret = self._process_vi(_bytes)
+            if ret:
+                return True
         return False
 
 
 class SshParamikoRepl(SubprocessRepl):
     TYPE = "ssh_paramiko"
 
-    def __init__(self, encoding, user, ip, key, env=None, vi_interceptor_handler=None, **kwds):
+    def __init__(self, encoding, user, ip, key, env=None, terminal_height=TERMINAL_HEIGHT, interceptor_handler=None, **kwds):
         Repl.__init__(self, encoding, **kwds)
         self._user = user
         self._ip = ip
         self._key = key
         self._env = env
-        self._vi_interceptor_handler = vi_interceptor_handler or ViInterceptor()
+        self._terminal_height = terminal_height
+        self._interceptor_handler = interceptor_handler or Interceptor()
         self._client = None
         self._transport = None
         self._channel = None
@@ -205,10 +210,7 @@ class SshParamikoRepl(SubprocessRepl):
         self._killed = False
 
         self._ansi_escape_8bit = ANSI_ESCAPE_8BIT_REGEX_BYTES
-
-        settings = sublime.load_settings(SETTINGS_FILE)
-        if settings.get("paramiko_intercept_vi"):
-            self._vi_interceptor_handler.attach(self)
+        self._interceptor_handler.attach(self)
         self._connect()
 
     def autocomplete_available(self):
@@ -239,7 +241,7 @@ class SshParamikoRepl(SubprocessRepl):
         self._channel = self._transport.open_session()
         if self._env:
             self._channel.update_environment(self._env)
-        self._channel.get_pty()
+        self._channel.get_pty(height=self._terminal_height)
         self._channel.invoke_shell()
 
     def name(self):
@@ -280,4 +282,6 @@ class SshParamikoRepl(SubprocessRepl):
 
     def send_signal(self, sig):
         self._rv.clear_queue()
-        self.write_bytes(b'\x03')
+        code = b'\x04' if sig in ('EOT', b'\x04') else b'\x03'
+        print(sig, code)
+        self.write_bytes(code)

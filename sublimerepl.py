@@ -32,6 +32,7 @@ SUBLIME2 = sublime.version() < '3000'
 # READ_BUFFER = 2048
 # READ_BUFFER = 8192
 READ_BUFFER = 32_768
+TERMINAL_HEIGHT = 24 # default
 
 
 class ReplInsertTextCommand(sublime_plugin.TextCommand):
@@ -187,9 +188,12 @@ class ReplView(object):
 
         self._filter_color_codes = settings.get("filter_ascii_color_codes")
         self._emulate_ansi_csi = settings.get("emulate_ansi_csi")
+        self._ansi_limit_cursor_up = settings.get("ansi_limit_cursor_up")
         self._debug_ansi = settings.get("debug_ansi", False)
         if self._emulate_ansi_csi:
-            self._ansi_controller = ansi_control.AnsiControl(self, is_ansi_allow_color=not self._filter_color_codes)
+            self._ansi_controller = ansi_control.AnsiControl(self, is_ansi_allow_color=not self._filter_color_codes,
+                                                             terminal_height=TERMINAL_HEIGHT,
+                                                             limit_cursor_up=self._ansi_limit_cursor_up)
             if not self._filter_color_codes:
                 ansi_color_utils.init_ansi_color(self)
         self._ansi_escape_8bit_regex = ANSI_ESCAPE_8BIT_REGEX
@@ -262,7 +266,7 @@ class ReplView(object):
     def on_tab(self):
         if self.repl.TYPE != "ssh_paramiko":
             return
-        self.repl._vi_interceptor_handler._process_tab(self.user_input)
+        self.repl._interceptor_handler._process_tab(self.user_input)
 
     def on_selection_modified(self):
         self._view.set_read_only(self.delta > 0)
