@@ -67,7 +67,7 @@ class Repl(object):
         """ Returns true if the undelying process is stil working"""
         raise NotImplementedError
 
-    def write_bytes(self, bytes):
+    def write_bytes(self, _bytes):
         raise NotImplementedError
 
     def read_bytes(self):
@@ -81,8 +81,8 @@ class Repl(object):
 
     def write(self, command):
         """Encodes and evaluates a given command"""
-        (bytes, how_many) = self.encoder(command)
-        return self.write_bytes(bytes)
+        (_bytes, how_many) = self.encoder(command)
+        return self.write_bytes(_bytes)
 
     def reset_decoder(self):
         self.decoder = getincrementaldecoder(self._encoding)()

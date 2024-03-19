@@ -27,7 +27,11 @@ def _cleanup_ansi():
         filetitle = os.path.splitext(file_name)[0]
         if filetitle not in repl_ids:
             file_path = os.path.join(color_dir, file_name)
-            os.remove(file_path)
+            try:
+                os.remove(file_path)
+            except Exception as e:
+                print(e)
+
 
 def plugin_loaded():
     global SUBLIMEREPL_DIR

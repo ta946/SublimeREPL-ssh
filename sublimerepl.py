@@ -23,6 +23,7 @@ except ImportError:
     from ansi.ansi_regex import ANSI_ESCAPE_8BIT_REGEX, ANSI_COLOR_REGEX
     from repllibs import PyDbLite
 from . import SETTINGS_FILE
+from .date_and_type_logger import get_date_and_type_logger
 
 # import importlib; importlib.reload(repls.subprocess_repl);
 # import importlib; importlib.reload(ansi_control);
@@ -144,7 +145,7 @@ class PersistentHistory(MemHistory):
 
 
 class ReplView(object):
-    def __init__(self, view, repl, syntax, repl_restart_args):
+    def __init__(self, view, repl, syntax, repl_restart_args, title=None, ip=None, user=None):
         self._ansi_controller = None
         self.repl = repl
         self.repl._rv = self
@@ -163,12 +164,19 @@ class ReplView(object):
         self._repl_reader = ReplReader(repl)
         self._repl_reader.start()
 
+        self._repl_title = title
+        self._repl_ip = ip
+        self._repl_user = user
+
         settings = sublime.load_settings(SETTINGS_FILE)
 
         view.settings().set("repl_external_id", repl.external_id)
         view.settings().set("repl_id", repl.id)
         view.settings().set("repl", True)
         view.settings().set("repl_sublime2", SUBLIME2)
+        view.settings().set("repl_title", self._repl_title)
+        view.settings().set("repl_ip", self._repl_ip)
+        view.settings().set("repl_user", self._repl_user)
         if repl.allow_restarts():
             view.settings().set("repl_restart_args", repl_restart_args)
 
@@ -185,6 +193,30 @@ class ReplView(object):
         else:
             self._history = MemHistory()
         self._history_match = None
+
+        self._view_auto_close = settings.get("view_auto_close")
+
+        self._log_input = settings.get("log_input")
+        self._separate_logs_per_server = settings.get("separate_logs_per_server")
+        if self._log_input and 'ssh' not in self.repl.TYPE:
+            self._log_input = False
+        if self._log_input:
+            if self._separate_logs_per_server:
+                if self._repl_title and self._repl_ip and self._repl_title != self._repl_ip and self._repl_ip in self._repl_title:
+                    name = self._repl_title.replace(self._repl_ip, '').strip()
+                else:
+                    name = self._repl_title or self._repl_ip or 'repl'
+            else:
+                name = 'repl'
+            log_directory_path = os.path.join(sublime.packages_path(), "User", "SublimeREPL-ssh", "logs")
+            filename = f'ssh_{name}.log'
+            self._logger = get_date_and_type_logger(
+                name, default_type='ReplLog', to_stdout=False, to_file=True, rotate_log=True,
+                rotate_kwargs={'when': 'D', 'interval': 7}, log_directory_path=log_directory_path, filename=filename
+            )
+            self._logger.debug("ssh start.", extra={"title": self._repl_title, "ip": self._repl_ip, "user": self._repl_user})
+        else:
+            self._logger = None
 
         self._filter_color_codes = settings.get("filter_ascii_color_codes")
         self._emulate_ansi_csi = settings.get("emulate_ansi_csi")
@@ -421,7 +453,7 @@ class ReplView(object):
 
         self.write("\n***Repl Killed***\n""" if self.repl._killed else "\n***Repl Closed***\n""")
         self._view.set_read_only(True)
-        if sublime.load_settings(SETTINGS_FILE).get("view_auto_close"):
+        if self._view_auto_close:
             window = self._view.window()
             if window is not None:
                 window.focus_view(self._view)
@@ -434,6 +466,8 @@ class ReplView(object):
     def push_history(self, command):
         self._history.push(command)
         self._history_match = None
+        if self._log_input and self._logger:
+            self._logger.info(command, extra={"title": self._repl_title, "ip": self._repl_ip, "user": self._repl_user})
 
     def ensure_history_match(self):
         user_input = self.user_input

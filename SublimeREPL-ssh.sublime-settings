@@ -118,5 +118,12 @@
     // allow editing file on server from within sublime by intercepting when you type
     // "vi ./folder/file_to_edit.txt", instead it will download file_to_edit.txt and open in new tab.
     // then on save, file_to_edit.txt is uploaded to server.
-    "paramiko_intercept_vi": false
+    "paramiko_intercept_vi": false,
+
+    // log the input text sent via ssh
+    "log_input": false,
+
+    // false: all input logs are stored in 1 file.
+    // true: input logs are split according to server name or ip address if no name
+    "separate_logs_per_server": false
 }

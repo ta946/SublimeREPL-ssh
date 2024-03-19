@@ -77,7 +77,9 @@ class ReplManager(object):
                     break
             view = found or window.new_file()
 
-            rv = ReplView(view, r, syntax, repl_restart_args)
+            ip = kwds.get('ip')
+            user = kwds.get('user')
+            rv = ReplView(view, r, syntax, repl_restart_args, title=title, ip=ip, user=user)
             rv.call_on_close.append(self._delete_repl)
             self.repl_views[r.id] = rv
             view.set_scratch(True)
