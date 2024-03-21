@@ -20,8 +20,6 @@ class Interceptor:
     def __init__(self, sftp_directory=SFTP_DIRECTORY):
         self._sftp_directory = sftp_directory
         self._intercept_recv = False
-        self.src_path = None
-        self.dest_path = None
 
         settings = sublime.load_settings(SETTINGS_FILE)
         self._is_intercept_vi = bool(settings.get("paramiko_intercept_vi"))
@@ -109,10 +107,10 @@ class Interceptor:
             path = os.path.join(parent, path).replace('\\','/')
         out_path = self._get_file(path)
         if out_path is not None:
-            self.src_path = out_path
-            self.dest_path = path
             view = sublime.active_window().open_file(out_path)
             view.settings().set('SublimeREPL-ssh-sftp', True)
+            view.settings().set('SublimeREPL-ssh-sftp.src_path', out_path)
+            view.settings().set('SublimeREPL-ssh-sftp.dest_path', path)
             view.settings().set('view_repl_id', self._repl.id)
         return True
 
@@ -211,7 +209,11 @@ class SshParamikoRepl(SubprocessRepl):
 
         self._ansi_escape_8bit = ANSI_ESCAPE_8BIT_REGEX_BYTES
         self._interceptor_handler.attach(self)
-        self._connect()
+        try:
+            sublime.active_window().active_view().set_status('SublimeREPL-ssh', f'connecting to {ip}')
+            self._connect()
+        finally:
+            sublime.active_window().active_view().erase_status('SublimeREPL-ssh')
 
     def autocomplete_available(self):
         return False
@@ -224,7 +226,7 @@ class SshParamikoRepl(SubprocessRepl):
         except:
             return False
         return True
-    
+
     def _connect(self):
         pkey = paramiko.RSAKey.from_private_key_file(self._key)
         self._client = paramiko.SSHClient()
