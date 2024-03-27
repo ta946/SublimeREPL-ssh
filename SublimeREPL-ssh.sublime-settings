@@ -65,7 +65,7 @@
     // those related to Sublime projects that are not available through standard API.
     // WARNING: this will switch your build system back to Automatic each time a REPL
     // is started so beware!
-    "use_build_system_hack": false,
+    // "use_build_system_hack": false,
 
     // IP address used to setup autocomplete server in SublimeREPL.
     // Changing this is useful when you want to exclude an address

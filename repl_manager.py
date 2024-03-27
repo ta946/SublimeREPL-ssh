@@ -6,7 +6,7 @@ import os
 import traceback
 
 from . import SETTINGS_FILE, CAN_USE_PARAMIKO
-from . import sublimerepl_build_system_hack
+# from . import sublimerepl_build_system_hack
 from .sublimerepl import ReplView
 from .repls.repl import Repl
 
@@ -155,9 +155,9 @@ class ReplManager(object):
         if 'folder' not in res:
             res["folder"] = res["file_path"]
 
-        if sublime.load_settings(SETTINGS_FILE).get("use_build_system_hack", False):
-            project_settings = sublimerepl_build_system_hack.get_project_settings(window)
-            res.update(project_settings)
+        # if sublime.load_settings(SETTINGS_FILE).get("use_build_system_hack", False):
+        #     project_settings = sublimerepl_build_system_hack.get_project_settings(window)
+        #     res.update(project_settings)
 
         return res
 
