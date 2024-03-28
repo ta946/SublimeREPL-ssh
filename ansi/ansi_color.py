@@ -79,34 +79,34 @@ class AnsiColor:
     def _decode_multi(self, idx, code_split):
         i = idx+1
         if i > len(code_split):
-            return i, None
+            return idx, None
         item = code_split[i]
         if item == '5':  # 256
-            i1 = idx+1
+            i1 = i+1
             if i1 > len(code_split):
                 return i1, None
-            n = code_split[i1]
-            color = self._xterm_color(n)
+            n = int(code_split[i1])
+            color = XTERM_COLORS_256[n]
             i2 = i1+1
-            if i2 > len(code_split):
-                return i2, color
+            if i2 >= len(code_split):
+                return i1, color
             item = code_split[i2]
             if item == '0':
                 return i2, color
             else:
                 return i1, color
         elif item == '2':  # rgb
-            i1 = idx+1
-            if i1 > len(code_split):
-                return i1, None
+            i1 = i+1
+            if i1 >= len(code_split):
+                return i, None
             r = code_split[i1]
             i2 = i1+1
-            if i2 > len(code_split):
-                return i2, None
+            if i2 >= len(code_split):
+                return i1, None
             g = code_split[i2]
             i3 = i2+1
-            if i3 > len(code_split):
-                return i3, None
+            if i3 >= len(code_split):
+                return i2, None
             b = code_split[i3]
             color = self._rgb_to_hex(r, g, b)
             item = code_split[i3]
@@ -224,6 +224,7 @@ def main():
     text = '\x00 \x00 \x00 \x00 \x00 \x00 \x00 \x00 \x00U\x00n\x00r\x00e\x00g\x00i\x00s\x00t\x00e\x00r\x00s\x00 \x00t\x00h\x00e\x00 \x00d\x00i\x00s\x00t\x00r\x00i\x00b\x00u\x00t\x00i\x00o\x00n\x00 \x00a\x00n\x00d\x00 \x00d\x00e\x00l\x00e\x00t\x00e\x00s\x00 \x00t\x00h\x00e\x00 \x00r\x00o\x00o\x00t\x00 \x00f\x00i\x00l\x00e\x00s\x00y\x00s\x00t\x00e\x00m\x00.\x00'
     text = 'total 100\ndrwxr-x---  8 ubuntu ubuntu  4096 Nov 20 15:59 \x1b[0m\x1b[01;34m.\x1b[0m\ndrwxr-xr-x  3 root   root    4096 Oct 13 12:35 \x1b[01;34m..\x1b[0m\n-rw-------  1 ubuntu docker 35709 Nov 20 15:59 .bash_history\n'
     text = 'type nginx_log.txt\n/docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration\n/docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/\n/docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh\n10-listen-on-ipv6-by-default.sh: info: Getting the checksum of /etc/nginx/conf.d/default.conf\n10-listen-on-ipv6-by-default.sh: info: /etc/nginx/conf.d/default.conf differs from the packaged version\n/docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh\n/docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh\n/docker-entrypoint.sh: Configuration complete; ready for start up\n2023/10/30 07:21:36 [notice] 1#1: using the "epoll" event method\n2023/10/30 07:21:36 [notice] 1#1: nginx/1.24.0\n2023/10/30 07:21:36 [notice] 1#1: built by gcc 10.2.1 20210110 (Debian 10.2.1-6) \n2023/10/30 07:21:36 [notice] 1#1: OS: Linux 6.2.0-1014-aws\n2023/10/30 07:21:36 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576\n2023/10/30 07:21:36 [notice] 1#1: start worker processes\n2023/10/30 07:21:36 [notice] 1#1: start worker process 27\n2023/10/30 07:21:36 [notice] 1#1: start worker process 28\n2023/10/30 07:21:36 [notice] 1#1: start worker process 29\n2023/10/30 07:21:36 [notice] 1#1: start worker process 30\n10.0.0.2 - - [30/Oct/2023:07:22:20 +0000] "POST /slbg_ask_server HTTP/1.1" 200 74 "-" "okhttp/4.11.0" "124.171.237.88"\n10.0.0.2 - - [30/Oct/2023:07:22:21 +0000] "POST /slbg_ask_server HTTP/1.1" 200 74 "-" "okhttp/4.11.0" "49.205.144.67"\n10.0.0.2 - - [30/Oct/2023:07:22:23 +0000] "POST /register_user HTTP/1.1" 409 26 "-" "okhttp/4.11.0" "124.171.237.88"\n10.0.0.2 - - [30/Oct/2023:07:22:23 +0000] "POST /register_user HTTP/1.1" 409 26 "-" "okhttp/4.11.0" "49.205.144.67"\n10.0.0.2 - - [30/Oct/2023:07:22:23 +0000] "GET /profile HTTP/1.1" 200 394 "-" "okhttp/4.11.0" "124.171.237.88"\n10.0.0.2 - - [30/Oct/2023:07:22:23 +0000] "POST /tips HTTP/1.1" 200 3224 "-" "okhttp/4.11.0" "124.171.237.88"\n10.0.0.2 - - [30/Oct/2023:07:22:23 +0000] "POST /slbg_login HTTP/1.1" 200 32 "-" "okhttp/4.11.0" "124.171.237.88"\n10.0.0.2 - - [30/Oct/2023:07:22:23 +0000] "GET /profile HTTP/1.1" 200 393 "-" "okhttp/4.11.0" "49.205.144.67"\n10.0.0.2 - - [30/Oct/2023:07:22:24 +0000] "POST /tips HTTP/1.1" 200 3224 "-" "okhttp/4.11.0" "49.205.144.67"\n10.0.0.2 - - [30/Oct/2023:07:22:24 +0000] "POST /slbg_login HTTP/1.1" 200 32 "-" "okhttp/4.11.0" "49.205.144.67"\n10.0.0.2 - - [30/Oct/2023:07:22:56 +0000] "POST /slbg_add_video HTTP/1.1" 200 51 "-" "okhttp/4.11.0" "124.171.237.88"\n10.0.0.2 - - [30/Oct/2023:07:22:59 +0000] "POST /slbg_app_event HTTP/1.1" 400 33 "-" "okhttp/4.11.0" "124.171.237.88"\n10.0.0.2 - - [30/Oct/2023:07:22:59 +0000] "POST /slbg_app_event HTTP/1.1" 400 33 "-" "okhttp/4.11.0" "124.171.237.88"\n10.0.0.2 - - [30/Oct/2023:07:22:59 +0000] "POST /coaching HTTP/1.1" 200 2268 "-" "okhttp/4.11.0" "124.171.237.88"\n10.0.0.2 - - [30/Oct/2023:07:22:59 +0000] "POST /coaching HTTP/1.1" 200 2268 "-" "okhttp/4.11.0" "124.171.237.88"\n10.0.0.2 - - [30/Oct/2023:07:23:03 +0000] "POST /fs_start_analysis HTTP/1.1" 200 39 "-" "python-requests/2.31.0" "13.54.4.183"\n10.'
+    text = "\033[0;48;5;202mserver: slinger_app_dev_202310\033[0m"
     ret, text_sections = handler.run(text)
     for a in text_sections:
         print(a)
