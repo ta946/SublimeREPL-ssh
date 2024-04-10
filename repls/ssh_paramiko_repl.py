@@ -50,25 +50,19 @@ class Interceptor:
                 pass
         return _bytes
 
-    def _get_cwd(self):
-        cwd = ''
+    def _intercept_cmd(self, _bytes):
+        results = None
         try:
             self._intercept_recv = True
-            msg = b'pwd\n'
-            self._repl._channel.sendall(msg)
-            _bytes = b''
-            for _ in range(5):
-                _bytes = self._recv_Q.get()
-                if b'/' in _bytes:
-                    break
-            if b'/' not in _bytes:
-                return None
-            index = _bytes.index(b'/')
-            cwd = _bytes[index:].decode()
-            if '\n' in cwd:
-                index = cwd.index('\n')
-                cwd = cwd[:index]
-            cwd = cwd.strip()
+            self._repl._channel.sendall(_bytes)
+            _bytes = self._recv_intercepted()
+            _bytes_split = _bytes.split(b'\n')
+            if len(_bytes_split) > 2:
+                results = _bytes_split[1:-1]
+                results[0] = self._repl._ansi_escape_8bit.sub(b'', results[0]).strip()
+        except Exception as e:
+            print('error in Interceptor')
+            print(e)
         finally:
             self._intercept_recv = False
             try:
@@ -77,7 +71,32 @@ class Interceptor:
                 pass
             with self._recv_Q.mutex:
                 self._recv_Q.queue.clear()
+        return results
+
+    def _get_cwd(self):
+        msg = b'pwd\n'
+        results = self._intercept_cmd(msg)
+        if not results:
+            return None
+        _bytes = results[0]
+        if b'/' not in _bytes:
+            return None
+        index = _bytes.index(b'/')
+        cwd = _bytes[index:].decode()
+        if '\n' in cwd:
+            index = cwd.index('\n')
+            cwd = cwd[:index]
+        cwd = cwd.strip()
         return cwd
+
+    def _get_user(self):
+        msg = f'echo $USER\n'.encode()
+        results = self._intercept_cmd(msg)
+        if not results:
+            return None
+        _bytes = results[0]
+        user = _bytes.decode()
+        return user
 
     def _get_file(self, path):
         filename = os.path.basename(path)
@@ -100,6 +119,11 @@ class Interceptor:
         path = _bytes[3:].strip().decode()
         if path.startswith('./'):
             path = path[2:]
+        elif path.startswith('~'):
+            user = self._get_user()
+            if not user:
+                return True
+            path = f'/home/{user}{path[1:]}'.replace('\\','/')
         if not path.startswith('/'):
             parent = self._get_cwd()
             if parent is None:
@@ -138,34 +162,18 @@ class Interceptor:
             prefix = ""
         else:
             prefix = f'{text_rsplit[0]} '
-        try:
-            self._intercept_recv = True
-            msg = f'compgen -f {word}\n'.encode()
-            self._repl._channel.sendall(msg)
-            _bytes = self._recv_intercepted()
-            _bytes_split = _bytes.split(b'\n')
-            if len(_bytes_split) > 2:
-                results = _bytes_split[1:-1]
-                results[0] = self._repl._ansi_escape_8bit.sub(b'', results[0]).strip()
-                if len(results) == 1:
-                    result = results[0]
-                else:
-                    result = self._common_prefix(results)
-                txt = f'{prefix}{result.decode()}'
-                view = sublime.active_window().active_view()
-                view.run_command('repl_escape')
-                view.run_command("repl_insert_text", {"pos": view.size(), "text": txt})
-        except Exception as e:
-            print('error in Interceptor')
-            print(e)
-        finally:
-            self._intercept_recv = False
-            try:
-                self._recv_Q.get_nowait()
-            except Empty:
-                pass
-            with self._recv_Q.mutex:
-                self._recv_Q.queue.clear()
+        msg = f'compgen -f {word}\n'.encode()
+        results = self._intercept_cmd(msg)
+        if not results:
+            return True
+        if len(results) == 1:
+            result = results[0]
+        else:
+            result = self._common_prefix(results)
+        txt = f'{prefix}{result.decode()}'
+        view = sublime.active_window().active_view()
+        view.run_command('repl_escape')
+        view.run_command("repl_insert_text", {"pos": view.size(), "text": txt})
         return True
 
     def attach(self, repl):
