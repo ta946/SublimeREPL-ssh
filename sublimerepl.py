@@ -8,6 +8,7 @@ import os
 import os.path
 import threading
 from datetime import datetime
+from time import sleep
 
 import sublime
 import sublime_plugin
@@ -445,7 +446,6 @@ class ReplView(object):
             self.write(packet)
 
     def _update_view_loop(self):
-        from time import sleep
         is_still_working = True
         while is_still_working:
             is_still_working = self.handle_repl_output()

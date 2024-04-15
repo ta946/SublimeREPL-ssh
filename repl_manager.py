@@ -4,6 +4,7 @@ import sublime_plugin
 import sys
 import os
 import traceback
+from string import Template
 
 from . import SETTINGS_FILE, CAN_USE_PARAMIKO
 # from . import sublimerepl_build_system_hack
@@ -163,7 +164,6 @@ class ReplManager(object):
 
     @staticmethod
     def _translate_string(window, string, subst=None):
-        from string import Template
         if subst is None:
             subst = ReplManager._subst_for_translate(window)
 
