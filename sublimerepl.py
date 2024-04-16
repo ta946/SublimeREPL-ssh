@@ -297,7 +297,7 @@ class ReplView(object):
                 self._window.run_command("move", {"by": "characters", "forward": False, "extend": True})
 
     def on_tab(self):
-        if self.repl.TYPE != "ssh_paramiko":
+        if self.repl.TYPE not in ("ssh_paramiko", "winpty"):
             return
         self.repl._interceptor_handler._process_tab(self.user_input)
 

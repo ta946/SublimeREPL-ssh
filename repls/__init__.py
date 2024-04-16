@@ -8,3 +8,4 @@ from .sublimeutop_repl import *
 # from .execnet_repl import *  # disabled for now
 from .ssh_repl import *
 from .ssh_paramiko_repl import *
+from .winpty_repl import *

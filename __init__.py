@@ -3,11 +3,13 @@ import sys
 
 SETTINGS_FILE = 'SublimeREPL-ssh.sublime-settings'
 CAN_USE_PARAMIKO = False
+CAN_USE_WINPTY = False
 
 if sys.platform.startswith('win'):
     try:
-        import six,cffi,bcrypt,cryptography,pycparser,nacl,paramiko
+        import winpty,six,cffi,bcrypt,cryptography,pycparser,nacl,paramiko
         CAN_USE_PARAMIKO = True
+        CAN_USE_WINPTY = True
     except (ImportError,ModuleNotFoundError):
         import sys
         import os
@@ -34,3 +36,10 @@ if sys.platform.startswith('win'):
             CAN_USE_PARAMIKO = True
         except (ModuleNotFoundError,ImportError):
             pass
+
+        try:
+            import winpty
+            CAN_USE_WINPTY = True
+        except (ModuleNotFoundError,ImportError):
+            pass
+

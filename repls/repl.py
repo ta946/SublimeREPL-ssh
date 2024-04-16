@@ -96,6 +96,9 @@ class Repl(object):
             try:
                 output = self.decoder.decode(bs)
             except Exception as e:
+                print('error decoding repl output')
+                print(bs)
+                print(e)
                 output = "■"
                 self.reset_decoder()
             if output:

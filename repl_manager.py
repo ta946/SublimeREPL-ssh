@@ -6,7 +6,7 @@ import os
 import traceback
 from string import Template
 
-from . import SETTINGS_FILE, CAN_USE_PARAMIKO
+from . import SETTINGS_FILE, CAN_USE_PARAMIKO, CAN_USE_WINPTY
 # from . import sublimerepl_build_system_hack
 from .sublimerepl import ReplView
 from .repls.repl import Repl
@@ -60,6 +60,8 @@ class ReplManager(object):
         return type, kwds
 
     def open(self, window, encoding, type, syntax=None, view_id=None, title=None, show_error=True, **kwds):
+        if type == 'winpty' and not CAN_USE_WINPTY:
+            raise Exception("winpty dependancy error!")
         type, kwds = self._check_paramiko(type, kwds)
         repl_restart_args = {
             'encoding': encoding,
