@@ -1,7 +1,6 @@
 from __future__ import absolute_import, unicode_literals, print_function, division
 
 import os
-import os.path
 import sys
 import json
 import sublime
@@ -38,6 +37,8 @@ def plugin_loaded():
     global SUBLIMEREPL_USER_DIR
     SUBLIMEREPL_DIR = "Packages/SublimeREPL-ssh"
     SUBLIMEREPL_USER_DIR = os.path.join(sublime.packages_path(), "User", "SublimeREPL-ssh")
+    if not os.path.exists(SUBLIMEREPL_USER_DIR):
+        os.makedirs(SUBLIMEREPL_USER_DIR, exist_ok=True)
     _cleanup_ansi()
 
 PY2 = False
