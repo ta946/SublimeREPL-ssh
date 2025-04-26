@@ -21,16 +21,27 @@ if sys.platform.startswith('win'):
                 d = os.path.join(dst, item)
                 if os.path.isdir(s):
                     if os.path.exists(d):
-                        shutil.rmtree(d)
+                        try:
+                            shutil.rmtree(d)
+                        except PermissionError as e:
+                            print(e)
+                            continue
                     shutil.copytree(s, d, symlinks, ignore)
                 else:
                     if os.path.exists(d):
-                        os.remove(d)
+                        try:
+                            os.remove(d)
+                        except PermissionError as e:
+                            print(e)
+                            continue
                     shutil.copy2(s, d)
         sublime_lib_p38 = os.path.join(sublime.packages_path(),'..','Lib','python38')
         copytree(os.path.join(os.path.dirname(__file__),'dependancies'), sublime_lib_p38)
         sublime_install_path = os.path.join(os.path.dirname(sys.executable),'python3.dll')
-        shutil.copy2(os.path.join(os.path.dirname(__file__),'python3.dll'), sublime_install_path)
+        try:
+            shutil.copy2(os.path.join(os.path.dirname(__file__),'python3.dll'), sublime_install_path)
+        except PermissionError as e:
+            print(e)
         try:
             import six,cffi,bcrypt,cryptography,pycparser,nacl,paramiko
             CAN_USE_PARAMIKO = True
@@ -42,4 +53,3 @@ if sys.platform.startswith('win'):
             CAN_USE_WINPTY = True
         except (ModuleNotFoundError,ImportError):
             pass
-
